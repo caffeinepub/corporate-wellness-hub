@@ -151,10 +151,6 @@ export const PROGRAM_ORDER: ProgramType[] = [
   ProgramType.exercise,
   ProgramType.socialGathering,
   ProgramType.taskAllocation,
-  ProgramType.boxCricket,
-  ProgramType.pickleball,
-  ProgramType.badminton,
-  ProgramType.tennis,
 ];
 
 export function getProgramConfig(type: ProgramType): ProgramConfig {

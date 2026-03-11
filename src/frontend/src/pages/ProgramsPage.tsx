@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useParams } from "@tanstack/react-router";
-import { Inbox, LogIn } from "lucide-react";
+import { Link, useParams } from "@tanstack/react-router";
+import { ArrowRight, Inbox, LogIn } from "lucide-react";
 import { motion } from "motion/react";
 import { CreateSessionModal } from "../components/CreateSessionModal";
 import { SessionCard, SessionCardSkeleton } from "../components/SessionCard";
@@ -61,6 +61,86 @@ const EXERCISE_SPORTS = [
     formats: ["Indoor"],
   },
 ];
+
+const MEETUP_ACTIVITIES = [
+  {
+    emoji: "☕",
+    name: "Chai Pe Charcha",
+    description:
+      "Informal conversations over chai — share ideas, vent, laugh, or just unwind with colleagues",
+    vibes: ["Casual", "Open Discussion"],
+    size: "4–10 people",
+  },
+  {
+    emoji: "🎙️",
+    name: "Open Mic Stories",
+    description:
+      "Share a 2-minute story, joke, or experience in a safe, supportive circle",
+    vibes: ["Creative", "Supportive"],
+    size: "6–15 people",
+  },
+  {
+    emoji: "🧩",
+    name: "Icebreaker Circle",
+    description:
+      "Quick fun questions and activities to spark connections across teams",
+    vibes: ["Fun", "Team Bonding"],
+    size: "5–20 people",
+  },
+  {
+    emoji: "🌿",
+    name: "Mindful Check-in",
+    description:
+      "A gentle round of sharing how you're really doing — no advice, just listening",
+    vibes: ["Mindful", "Safe Space"],
+    size: "3–8 people",
+  },
+  {
+    emoji: "🚶",
+    name: "Walk & Talk",
+    description:
+      "Side-by-side strolls that make deep conversations feel easier and lighter",
+    vibes: ["Active", "1:1 or Small Group"],
+    size: "2–6 people",
+  },
+  {
+    emoji: "📖",
+    name: "Book / Podcast Club",
+    description:
+      "Discuss a chapter, episode, or idea that made you think differently",
+    vibes: ["Intellectual", "Curious"],
+    size: "4–12 people",
+  },
+];
+
+const VIBE_COLORS: Record<string, string> = {
+  Casual:
+    "bg-[oklch(0.93_0.07_75)] text-[oklch(0.38_0.13_65)] border-[oklch(0.80_0.10_72)]",
+  "Open Discussion":
+    "bg-[oklch(0.92_0.06_190)] text-[oklch(0.35_0.11_190)] border-[oklch(0.78_0.09_190)]",
+  Creative:
+    "bg-[oklch(0.92_0.07_295)] text-[oklch(0.36_0.12_295)] border-[oklch(0.77_0.09_295)]",
+  Supportive:
+    "bg-[oklch(0.93_0.06_155)] text-[oklch(0.32_0.12_155)] border-[oklch(0.76_0.09_155)]",
+  Fun: "bg-[oklch(0.94_0.08_50)] text-[oklch(0.38_0.14_48)] border-[oklch(0.80_0.11_50)]",
+  "Team Bonding":
+    "bg-[oklch(0.92_0.07_115)] text-[oklch(0.36_0.12_115)] border-[oklch(0.78_0.09_115)]",
+  Mindful:
+    "bg-[oklch(0.93_0.06_190)] text-[oklch(0.35_0.11_190)] border-[oklch(0.78_0.09_190)]",
+  "Safe Space":
+    "bg-[oklch(0.93_0.05_230)] text-[oklch(0.34_0.10_230)] border-[oklch(0.77_0.08_230)]",
+  Active:
+    "bg-[oklch(0.92_0.07_145)] text-[oklch(0.32_0.12_145)] border-[oklch(0.76_0.09_145)]",
+  "1:1 or Small Group":
+    "bg-[oklch(0.94_0.06_75)] text-[oklch(0.40_0.12_72)] border-[oklch(0.82_0.09_75)]",
+  Intellectual:
+    "bg-[oklch(0.92_0.07_260)] text-[oklch(0.35_0.12_260)] border-[oklch(0.77_0.09_260)]",
+  Curious:
+    "bg-[oklch(0.93_0.07_50)] text-[oklch(0.38_0.13_48)] border-[oklch(0.79_0.10_50)]",
+};
+
+const DEFAULT_VIBE_COLOR =
+  "bg-[oklch(0.92_0.05_190)] text-[oklch(0.35_0.10_190)] border-[oklch(0.78_0.08_190)]";
 
 const LEVEL_STYLES: Record<string, string> = {
   Beginner:
@@ -149,6 +229,100 @@ function SportCategoriesSection() {
   );
 }
 
+function MeetupActivitiesSection() {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="mb-10"
+    >
+      <div className="flex items-center justify-between gap-3 mb-5">
+        <div className="flex items-center gap-3">
+          <h2 className="font-display text-xl font-bold text-foreground">
+            Meetup Ideas
+          </h2>
+          <span className="text-xs text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full border border-border/50">
+            {MEETUP_ACTIVITIES.length} previewed
+          </span>
+        </div>
+        <Link to="/meetup-activities">
+          <Button
+            variant="outline"
+            size="sm"
+            data-ocid="meetup.view_all.button"
+            className="gap-1.5 text-xs"
+          >
+            View All Activities
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Button>
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {MEETUP_ACTIVITIES.map((activity, i) => (
+          <motion.div
+            key={activity.name}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.07, duration: 0.4 }}
+            data-ocid={`meetup.activity.item.${i + 1}`}
+            className="bg-card rounded-2xl border border-border/60 p-5 hover:border-primary/30 hover:shadow-md transition-all duration-250"
+          >
+            <div className="flex items-start gap-3 mb-3">
+              <span className="text-2xl leading-none mt-0.5">
+                {activity.emoji}
+              </span>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-sm text-foreground leading-tight">
+                  {activity.name}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  {activity.description}
+                </p>
+              </div>
+            </div>
+
+            {/* Vibe badges */}
+            <div className="flex flex-wrap gap-1 mb-2">
+              {activity.vibes.map((vibe) => (
+                <span
+                  key={vibe}
+                  className={`inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${
+                    VIBE_COLORS[vibe] ?? DEFAULT_VIBE_COLOR
+                  }`}
+                >
+                  {vibe}
+                </span>
+              ))}
+            </div>
+
+            {/* Group size */}
+            <div className="text-[10px] text-muted-foreground font-medium mt-1">
+              👥 {activity.size}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* View all CTA */}
+      <div className="mt-5 text-center">
+        <Link to="/meetup-activities">
+          <Button
+            variant="ghost"
+            size="sm"
+            data-ocid="meetup.view_all_bottom.button"
+            className="gap-2 text-muted-foreground hover:text-foreground text-xs"
+          >
+            See 8 more activities
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Button>
+        </Link>
+      </div>
+    </motion.section>
+  );
+}
+
 export function ProgramsPage() {
   const { type } = useParams({ from: "/programs/$type" });
   const programType = getProgramTypeFromPath(type) ?? ProgramType.meetup;
@@ -201,6 +375,9 @@ export function ProgramsPage() {
 
         {/* Sport Categories — only for exercise */}
         {programType === ProgramType.exercise && <SportCategoriesSection />}
+
+        {/* Meetup Ideas — only for meetup */}
+        {programType === ProgramType.meetup && <MeetupActivitiesSection />}
 
         {/* Sessions */}
         {isLoading ? (

@@ -10,6 +10,7 @@ import {
 import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
 import { LandingPage } from "./pages/LandingPage";
+import { MindfulMeetupPage } from "./pages/MindfulMeetupPage";
 import { MySessionsPage } from "./pages/MySessionsPage";
 import { ProgramsPage } from "./pages/ProgramsPage";
 import { SessionDetailPage } from "./pages/SessionDetailPage";
@@ -53,6 +54,12 @@ const mySessionsRoute = createRoute({
   component: MySessionsPage,
 });
 
+const meetupActivitiesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/meetup-activities",
+  component: MindfulMeetupPage,
+});
+
 // Redirect /programs -> /programs/meetup
 const programsRedirectRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -70,6 +77,7 @@ const routeTree = rootRoute.addChildren([
   programsRedirectRoute,
   sessionDetailRoute,
   mySessionsRoute,
+  meetupActivitiesRoute,
 ]);
 
 const router = createRouter({ routeTree });

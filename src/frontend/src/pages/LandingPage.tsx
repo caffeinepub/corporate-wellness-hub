@@ -75,7 +75,7 @@ export function LandingPage() {
               variants={itemVariants}
               className="flex flex-col sm:flex-row items-center justify-center gap-3"
             >
-              <Link to="/programs/$type" params={{ type: "meetup" }}>
+              <Link to="/meetup-activities">
                 <Button
                   size="lg"
                   data-ocid="hero.primary_button"
@@ -159,17 +159,17 @@ export function LandingPage() {
               Choose your path to calm
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Eight thoughtfully designed programs — from mindful meetups and
-              social gatherings to sports like Box Cricket, Pickleball,
-              Badminton, and Tennis — helping you reduce stress and build real
-              connections.
+              Four thoughtfully designed programs — from mindful meetups and
+              social gatherings to movement and collaborative task sharing —
+              helping you reduce stress and build real connections.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-5">
             {PROGRAM_ORDER.map((type, i) => {
               const cfg = PROGRAM_CONFIGS[type];
               const isExercise = type === ProgramType.exercise;
+              const isMeetup = type === ProgramType.meetup;
               return (
                 <motion.div
                   key={type}
@@ -178,59 +178,93 @@ export function LandingPage() {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.07, duration: 0.45 }}
                 >
-                  <Link to="/programs/$type" params={{ type }}>
-                    <div
-                      data-ocid={`programs.${type}.card`}
-                      className="group relative bg-card rounded-2xl border border-border hover:border-primary/30 shadow-glow hover:shadow-xl transition-all duration-300 overflow-hidden p-6 cursor-pointer h-full"
-                    >
-                      {/* Background gradient */}
+                  {isMeetup ? (
+                    <Link to="/meetup-activities">
                       <div
-                        className={`absolute inset-0 ${cfg.bgClass} opacity-0 group-hover:opacity-30 transition-opacity duration-300`}
-                      />
-
-                      <div className="relative">
+                        data-ocid={`programs.${type}.card`}
+                        className="group relative bg-card rounded-2xl border border-border hover:border-primary/30 shadow-glow hover:shadow-xl transition-all duration-300 overflow-hidden p-6 cursor-pointer h-full"
+                      >
                         <div
-                          className={`inline-flex items-center justify-center w-12 h-12 rounded-2xl ${cfg.bgClass} mb-4 text-2xl shadow-sm`}
-                        >
-                          {cfg.emoji}
-                        </div>
-                        <h3
-                          className={`font-display font-bold text-xl text-foreground mb-1.5 group-hover:${cfg.textClass} transition-colors`}
-                        >
-                          {cfg.label}
-                        </h3>
-                        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                          {cfg.description}
-                        </p>
-
-                        {/* Sport pills for exercise card */}
-                        {isExercise && (
-                          <div className="flex flex-wrap gap-1.5 mb-4">
-                            {EXERCISE_SPORT_PILLS.map((sport) => (
-                              <span
-                                key={sport.name}
-                                className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border ${cfg.badgeClass}`}
-                              >
-                                {sport.emoji} {sport.name}
-                              </span>
-                            ))}
-                            <span
-                              className={`inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full border ${cfg.badgeClass} opacity-70`}
-                            >
-                              +2 more
-                            </span>
+                          className={`absolute inset-0 ${cfg.bgClass} opacity-0 group-hover:opacity-30 transition-opacity duration-300`}
+                        />
+                        <div className="relative">
+                          <div
+                            className={`inline-flex items-center justify-center w-12 h-12 rounded-2xl ${cfg.bgClass} mb-4 text-2xl shadow-sm`}
+                          >
+                            {cfg.emoji}
                           </div>
-                        )}
-
-                        <div
-                          className={`inline-flex items-center gap-1.5 text-xs font-medium ${cfg.textClass}`}
-                        >
-                          <span className="italic">{cfg.tagline}</span>
-                          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                          <h3
+                            className={`font-display font-bold text-xl text-foreground mb-1.5 group-hover:${cfg.textClass} transition-colors`}
+                          >
+                            {cfg.label}
+                          </h3>
+                          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                            {cfg.description}
+                          </p>
+                          <div
+                            className={`inline-flex items-center gap-1.5 text-xs font-medium ${cfg.textClass}`}
+                          >
+                            <span className="italic">{cfg.tagline}</span>
+                            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
+                  ) : (
+                    <Link to="/programs/$type" params={{ type }}>
+                      <div
+                        data-ocid={`programs.${type}.card`}
+                        className="group relative bg-card rounded-2xl border border-border hover:border-primary/30 shadow-glow hover:shadow-xl transition-all duration-300 overflow-hidden p-6 cursor-pointer h-full"
+                      >
+                        {/* Background gradient */}
+                        <div
+                          className={`absolute inset-0 ${cfg.bgClass} opacity-0 group-hover:opacity-30 transition-opacity duration-300`}
+                        />
+
+                        <div className="relative">
+                          <div
+                            className={`inline-flex items-center justify-center w-12 h-12 rounded-2xl ${cfg.bgClass} mb-4 text-2xl shadow-sm`}
+                          >
+                            {cfg.emoji}
+                          </div>
+                          <h3
+                            className={`font-display font-bold text-xl text-foreground mb-1.5 group-hover:${cfg.textClass} transition-colors`}
+                          >
+                            {cfg.label}
+                          </h3>
+                          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                            {cfg.description}
+                          </p>
+
+                          {/* Sport pills for exercise card */}
+                          {isExercise && (
+                            <div className="flex flex-wrap gap-1.5 mb-4">
+                              {EXERCISE_SPORT_PILLS.map((sport) => (
+                                <span
+                                  key={sport.name}
+                                  className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border ${cfg.badgeClass}`}
+                                >
+                                  {sport.emoji} {sport.name}
+                                </span>
+                              ))}
+                              <span
+                                className={`inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full border ${cfg.badgeClass} opacity-70`}
+                              >
+                                +2 more
+                              </span>
+                            </div>
+                          )}
+
+                          <div
+                            className={`inline-flex items-center gap-1.5 text-xs font-medium ${cfg.textClass}`}
+                          >
+                            <span className="italic">{cfg.tagline}</span>
+                            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  )}
                 </motion.div>
               );
             })}
@@ -257,7 +291,7 @@ export function LandingPage() {
                 Join thousands of people who have found their community and
                 their calm on Stress Relief Hub.
               </p>
-              <Link to="/programs/$type" params={{ type: "meetup" }}>
+              <Link to="/meetup-activities">
                 <Button
                   size="lg"
                   variant="secondary"
