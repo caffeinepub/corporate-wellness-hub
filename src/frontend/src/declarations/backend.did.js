@@ -14,9 +14,13 @@ export const UserRole = IDL.Variant({
   'guest' : IDL.Null,
 });
 export const ProgramType = IDL.Variant({
+  'boxCricket' : IDL.Null,
   'socialGathering' : IDL.Null,
   'exercise' : IDL.Null,
+  'pickleball' : IDL.Null,
   'taskAllocation' : IDL.Null,
+  'tennis' : IDL.Null,
+  'badminton' : IDL.Null,
   'meetup' : IDL.Null,
 });
 export const Time = IDL.Int;
@@ -40,6 +44,7 @@ export const Task = IDL.Record({
   'description' : IDL.Text,
   'sessionId' : IDL.Nat,
 });
+export const UserProfile = IDL.Record({ 'name' : IDL.Text });
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
@@ -57,6 +62,7 @@ export const idlService = IDL.Service({
   'deleteSession' : IDL.Func([IDL.Nat], [], []),
   'getAllSessions' : IDL.Func([], [IDL.Vec(Session)], ['query']),
   'getAllTasks' : IDL.Func([], [IDL.Vec(Task)], ['query']),
+  'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getMySessions' : IDL.Func(
       [],
@@ -71,10 +77,16 @@ export const idlService = IDL.Service({
     ),
   'getTask' : IDL.Func([IDL.Nat], [Task], ['query']),
   'getTasksBySession' : IDL.Func([IDL.Nat], [IDL.Vec(Task)], ['query']),
+  'getUserProfile' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Opt(UserProfile)],
+      ['query'],
+    ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'joinSession' : IDL.Func([IDL.Nat], [], []),
   'leaveSession' : IDL.Func([IDL.Nat], [], []),
   'markTaskComplete' : IDL.Func([IDL.Nat], [], []),
+  'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
 });
 
 export const idlInitArgs = [];
@@ -86,9 +98,13 @@ export const idlFactory = ({ IDL }) => {
     'guest' : IDL.Null,
   });
   const ProgramType = IDL.Variant({
+    'boxCricket' : IDL.Null,
     'socialGathering' : IDL.Null,
     'exercise' : IDL.Null,
+    'pickleball' : IDL.Null,
     'taskAllocation' : IDL.Null,
+    'tennis' : IDL.Null,
+    'badminton' : IDL.Null,
     'meetup' : IDL.Null,
   });
   const Time = IDL.Int;
@@ -112,6 +128,7 @@ export const idlFactory = ({ IDL }) => {
     'description' : IDL.Text,
     'sessionId' : IDL.Nat,
   });
+  const UserProfile = IDL.Record({ 'name' : IDL.Text });
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
@@ -129,6 +146,7 @@ export const idlFactory = ({ IDL }) => {
     'deleteSession' : IDL.Func([IDL.Nat], [], []),
     'getAllSessions' : IDL.Func([], [IDL.Vec(Session)], ['query']),
     'getAllTasks' : IDL.Func([], [IDL.Vec(Task)], ['query']),
+    'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getMySessions' : IDL.Func(
         [],
@@ -143,10 +161,16 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getTask' : IDL.Func([IDL.Nat], [Task], ['query']),
     'getTasksBySession' : IDL.Func([IDL.Nat], [IDL.Vec(Task)], ['query']),
+    'getUserProfile' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(UserProfile)],
+        ['query'],
+      ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'joinSession' : IDL.Func([IDL.Nat], [], []),
     'leaveSession' : IDL.Func([IDL.Nat], [], []),
     'markTaskComplete' : IDL.Func([IDL.Nat], [], []),
+    'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   });
 };
 

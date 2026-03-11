@@ -110,10 +110,17 @@ export interface Session {
     dateTime: bigint;
 }
 export type Time = bigint;
+export interface UserProfile {
+    name: string;
+}
 export enum ProgramType {
+    boxCricket = "boxCricket",
     socialGathering = "socialGathering",
     exercise = "exercise",
+    pickleball = "pickleball",
     taskAllocation = "taskAllocation",
+    tennis = "tennis",
+    badminton = "badminton",
     meetup = "meetup"
 }
 export enum UserRole {
@@ -129,18 +136,21 @@ export interface backendInterface {
     deleteSession(sessionId: bigint): Promise<void>;
     getAllSessions(): Promise<Array<Session>>;
     getAllTasks(): Promise<Array<Task>>;
+    getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getMySessions(): Promise<[Array<Session>, Array<Session>]>;
     getSession(sessionId: bigint): Promise<Session>;
     getSessionsByProgramType(programType: ProgramType): Promise<Array<Session>>;
     getTask(taskId: bigint): Promise<Task>;
     getTasksBySession(sessionId: bigint): Promise<Array<Task>>;
+    getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     joinSession(sessionId: bigint): Promise<void>;
     leaveSession(sessionId: bigint): Promise<void>;
     markTaskComplete(taskId: bigint): Promise<void>;
+    saveCallerUserProfile(profile: UserProfile): Promise<void>;
 }
-import type { ProgramType as _ProgramType, Session as _Session, Task as _Task, Time as _Time, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
+import type { ProgramType as _ProgramType, Session as _Session, Task as _Task, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
@@ -241,18 +251,32 @@ export class Backend implements backendInterface {
             return from_candid_vec_n11(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getCallerUserProfile(): Promise<UserProfile | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCallerUserProfile();
+                return from_candid_opt_n15(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCallerUserProfile();
+            return from_candid_opt_n15(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async getCallerUserRole(): Promise<UserRole> {
         if (this.processError) {
             try {
                 const result = await this.actor.getCallerUserRole();
-                return from_candid_UserRole_n15(this._uploadFile, this._downloadFile, result);
+                return from_candid_UserRole_n16(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getCallerUserRole();
-            return from_candid_UserRole_n15(this._uploadFile, this._downloadFile, result);
+            return from_candid_UserRole_n16(this._uploadFile, this._downloadFile, result);
         }
     }
     async getMySessions(): Promise<[Array<Session>, Array<Session>]> {
@@ -331,6 +355,20 @@ export class Backend implements backendInterface {
             return from_candid_vec_n11(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getUserProfile(arg0);
+                return from_candid_opt_n15(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getUserProfile(arg0);
+            return from_candid_opt_n15(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async isCallerAdmin(): Promise<boolean> {
         if (this.processError) {
             try {
@@ -387,6 +425,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.saveCallerUserProfile(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.saveCallerUserProfile(arg0);
+            return result;
+        }
+    }
 }
 function from_candid_ProgramType_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ProgramType): ProgramType {
     return from_candid_variant_n10(_uploadFile, _downloadFile, value);
@@ -397,10 +449,13 @@ function from_candid_Session_n7(_uploadFile: (file: ExternalBlob) => Promise<Uin
 function from_candid_Task_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Task): Task {
     return from_candid_record_n13(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserRole_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
-    return from_candid_variant_n16(_uploadFile, _downloadFile, value);
+function from_candid_UserRole_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
+    return from_candid_variant_n17(_uploadFile, _downloadFile, value);
 }
 function from_candid_opt_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [Principal]): Principal | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
     return value.length === 0 ? null : value[0];
 }
 function from_candid_record_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -464,17 +519,25 @@ function from_candid_record_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint
     };
 }
 function from_candid_variant_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    boxCricket: null;
+} | {
     socialGathering: null;
 } | {
     exercise: null;
 } | {
+    pickleball: null;
+} | {
     taskAllocation: null;
+} | {
+    tennis: null;
+} | {
+    badminton: null;
 } | {
     meetup: null;
 }): ProgramType {
-    return "socialGathering" in value ? ProgramType.socialGathering : "exercise" in value ? ProgramType.exercise : "taskAllocation" in value ? ProgramType.taskAllocation : "meetup" in value ? ProgramType.meetup : value;
+    return "boxCricket" in value ? ProgramType.boxCricket : "socialGathering" in value ? ProgramType.socialGathering : "exercise" in value ? ProgramType.exercise : "pickleball" in value ? ProgramType.pickleball : "taskAllocation" in value ? ProgramType.taskAllocation : "tennis" in value ? ProgramType.tennis : "badminton" in value ? ProgramType.badminton : "meetup" in value ? ProgramType.meetup : value;
 }
-function from_candid_variant_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     admin: null;
 } | {
     user: null;
@@ -514,20 +577,36 @@ function to_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8
     } : value;
 }
 function to_candid_variant_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ProgramType): {
+    boxCricket: null;
+} | {
     socialGathering: null;
 } | {
     exercise: null;
 } | {
+    pickleball: null;
+} | {
     taskAllocation: null;
+} | {
+    tennis: null;
+} | {
+    badminton: null;
 } | {
     meetup: null;
 } {
-    return value == ProgramType.socialGathering ? {
+    return value == ProgramType.boxCricket ? {
+        boxCricket: null
+    } : value == ProgramType.socialGathering ? {
         socialGathering: null
     } : value == ProgramType.exercise ? {
         exercise: null
+    } : value == ProgramType.pickleball ? {
+        pickleball: null
     } : value == ProgramType.taskAllocation ? {
         taskAllocation: null
+    } : value == ProgramType.tennis ? {
+        tennis: null
+    } : value == ProgramType.badminton ? {
+        badminton: null
     } : value == ProgramType.meetup ? {
         meetup: null
     } : value;

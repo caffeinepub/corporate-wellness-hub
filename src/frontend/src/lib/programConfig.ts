@@ -80,6 +80,70 @@ export const PROGRAM_CONFIGS: Record<ProgramType, ProgramConfig> = {
     textClass: "text-[oklch(0.40_0.13_75)]",
     path: "/programs/taskAllocation",
   },
+  [ProgramType.boxCricket]: {
+    type: ProgramType.boxCricket,
+    label: "Box Cricket",
+    shortLabel: "Box Cricket",
+    description:
+      "Fast-paced indoor cricket in a compact arena — perfect for team bonding, friendly rivalries, and a great cardio session.",
+    tagline: "Bat, bowl, bond",
+    emoji: "🏏",
+    colorClass: "text-[oklch(0.45_0.15_50)]",
+    bgClass: "bg-[oklch(0.94_0.06_50)]",
+    borderClass: "border-[oklch(0.80_0.10_50)]",
+    badgeClass:
+      "bg-[oklch(0.94_0.06_50)] text-[oklch(0.38_0.14_50)] border-[oklch(0.80_0.10_50)]",
+    textClass: "text-[oklch(0.38_0.14_50)]",
+    path: "/programs/boxCricket",
+  },
+  [ProgramType.pickleball]: {
+    type: ProgramType.pickleball,
+    label: "Pickleball",
+    shortLabel: "Pickleball",
+    description:
+      "The fastest-growing sport in the office! Easy to learn, endlessly fun — play singles or doubles and build cross-team camaraderie.",
+    tagline: "Dink, drive, dominate",
+    emoji: "🏓",
+    colorClass: "text-[oklch(0.46_0.14_115)]",
+    bgClass: "bg-[oklch(0.93_0.06_115)]",
+    borderClass: "border-[oklch(0.79_0.10_115)]",
+    badgeClass:
+      "bg-[oklch(0.93_0.06_115)] text-[oklch(0.36_0.13_115)] border-[oklch(0.79_0.10_115)]",
+    textClass: "text-[oklch(0.36_0.13_115)]",
+    path: "/programs/pickleball",
+  },
+  [ProgramType.badminton]: {
+    type: ProgramType.badminton,
+    label: "Badminton",
+    shortLabel: "Badminton",
+    description:
+      "Shuttle smashes and rapid rallies — badminton is an excellent full-body workout that sharpens reflexes and lifts your mood.",
+    tagline: "Rally your way to relief",
+    emoji: "🏸",
+    colorClass: "text-[oklch(0.44_0.14_230)]",
+    bgClass: "bg-[oklch(0.92_0.05_230)]",
+    borderClass: "border-[oklch(0.77_0.09_230)]",
+    badgeClass:
+      "bg-[oklch(0.92_0.05_230)] text-[oklch(0.34_0.13_230)] border-[oklch(0.77_0.09_230)]",
+    textClass: "text-[oklch(0.34_0.13_230)]",
+    path: "/programs/badminton",
+  },
+  [ProgramType.tennis]: {
+    type: ProgramType.tennis,
+    label: "Tennis",
+    shortLabel: "Tennis",
+    description:
+      "Serve, volley, and unwind on the court. Tennis sessions for all skill levels — a timeless sport for focus and stress relief.",
+    tagline: "Game, set, de-stress",
+    emoji: "🎾",
+    colorClass: "text-[oklch(0.50_0.15_98)]",
+    bgClass: "bg-[oklch(0.94_0.07_98)]",
+    borderClass: "border-[oklch(0.82_0.11_98)]",
+    badgeClass:
+      "bg-[oklch(0.94_0.07_98)] text-[oklch(0.40_0.14_98)] border-[oklch(0.82_0.11_98)]",
+    textClass: "text-[oklch(0.40_0.14_98)]",
+    path: "/programs/tennis",
+  },
 };
 
 export const PROGRAM_ORDER: ProgramType[] = [
@@ -87,6 +151,10 @@ export const PROGRAM_ORDER: ProgramType[] = [
   ProgramType.exercise,
   ProgramType.socialGathering,
   ProgramType.taskAllocation,
+  ProgramType.boxCricket,
+  ProgramType.pickleball,
+  ProgramType.badminton,
+  ProgramType.tennis,
 ];
 
 export function getProgramConfig(type: ProgramType): ProgramConfig {
@@ -99,6 +167,10 @@ export function getProgramTypeFromPath(path: string): ProgramType | null {
     exercise: ProgramType.exercise,
     socialGathering: ProgramType.socialGathering,
     taskAllocation: ProgramType.taskAllocation,
+    boxCricket: ProgramType.boxCricket,
+    pickleball: ProgramType.pickleball,
+    badminton: ProgramType.badminton,
+    tennis: ProgramType.tennis,
   };
   return map[path] ?? null;
 }

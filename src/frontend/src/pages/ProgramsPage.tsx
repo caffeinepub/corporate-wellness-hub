@@ -10,6 +10,145 @@ import { useSessionsByType } from "../hooks/useQueries";
 import { ProgramType } from "../hooks/useQueries";
 import { getProgramConfig, getProgramTypeFromPath } from "../lib/programConfig";
 
+const EXERCISE_SPORTS = [
+  {
+    emoji: "🏏",
+    name: "Box Cricket",
+    description: "Fast-paced team cricket in a compact arena",
+    levels: ["Beginner", "Intermediate", "Advanced"],
+    formats: ["Indoor"],
+  },
+  {
+    emoji: "🏓",
+    name: "Pickleball",
+    description: "Easy to learn, endlessly fun racket sport",
+    levels: ["Beginner", "Intermediate"],
+    formats: ["Indoor", "Outdoor"],
+  },
+  {
+    emoji: "🏸",
+    name: "Badminton",
+    description: "Full-body workout with rapid rallies",
+    levels: ["Beginner", "Intermediate", "Advanced"],
+    formats: ["Indoor"],
+  },
+  {
+    emoji: "🎾",
+    name: "Tennis",
+    description: "Serve, volley, and unwind on the court",
+    levels: ["Beginner", "Intermediate", "Advanced"],
+    formats: ["Outdoor"],
+  },
+  {
+    emoji: "🧘",
+    name: "Yoga",
+    description: "Mindful movement for stress relief",
+    levels: ["Beginner", "Intermediate"],
+    formats: ["Indoor"],
+  },
+  {
+    emoji: "🏃",
+    name: "Running",
+    description: "Group runs to clear the mind",
+    levels: ["Beginner", "Intermediate", "Advanced"],
+    formats: ["Outdoor"],
+  },
+  {
+    emoji: "💪",
+    name: "Group Workout",
+    description: "HIIT and strength sessions together",
+    levels: ["Beginner", "Intermediate"],
+    formats: ["Indoor"],
+  },
+];
+
+const LEVEL_STYLES: Record<string, string> = {
+  Beginner:
+    "bg-[oklch(0.92_0.08_145)] text-[oklch(0.30_0.12_145)] border-[oklch(0.76_0.10_145)]",
+  Intermediate:
+    "bg-[oklch(0.94_0.09_85)] text-[oklch(0.38_0.14_75)] border-[oklch(0.82_0.11_80)]",
+  Advanced:
+    "bg-[oklch(0.93_0.08_50)] text-[oklch(0.38_0.14_40)] border-[oklch(0.78_0.12_48)]",
+};
+
+const FORMAT_STYLES: Record<string, string> = {
+  Indoor:
+    "bg-[oklch(0.92_0.05_230)] text-[oklch(0.34_0.12_230)] border-[oklch(0.77_0.09_230)]",
+  Outdoor:
+    "bg-[oklch(0.92_0.05_155)] text-[oklch(0.32_0.12_155)] border-[oklch(0.75_0.08_155)]",
+};
+
+function SportCategoriesSection() {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="mb-10"
+    >
+      <div className="flex items-center gap-3 mb-5">
+        <h2 className="font-display text-xl font-bold text-foreground">
+          Sport Categories
+        </h2>
+        <span className="text-xs text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full border border-border/50">
+          {EXERCISE_SPORTS.length} activities
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {EXERCISE_SPORTS.map((sport, i) => (
+          <motion.div
+            key={sport.name}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.06, duration: 0.4 }}
+            data-ocid={`exercise.sport.item.${i + 1}`}
+            className="bg-card rounded-2xl border border-border/60 p-4 hover:border-primary/30 hover:shadow-md transition-all duration-250"
+          >
+            <div className="flex items-start gap-3 mb-3">
+              <span className="text-2xl leading-none mt-0.5">
+                {sport.emoji}
+              </span>
+              <div>
+                <h3 className="font-semibold text-sm text-foreground leading-tight">
+                  {sport.name}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                  {sport.description}
+                </p>
+              </div>
+            </div>
+
+            {/* Skill level badges */}
+            <div className="flex flex-wrap gap-1 mb-2">
+              {sport.levels.map((level) => (
+                <span
+                  key={level}
+                  className={`inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${LEVEL_STYLES[level]}`}
+                >
+                  {level}
+                </span>
+              ))}
+            </div>
+
+            {/* Format tags */}
+            <div className="flex flex-wrap gap-1">
+              {sport.formats.map((fmt) => (
+                <span
+                  key={fmt}
+                  className={`inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${FORMAT_STYLES[fmt]}`}
+                >
+                  {fmt === "Indoor" ? "🏢" : "🌿"} {fmt}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.section>
+  );
+}
+
 export function ProgramsPage() {
   const { type } = useParams({ from: "/programs/$type" });
   const programType = getProgramTypeFromPath(type) ?? ProgramType.meetup;
@@ -59,6 +198,9 @@ export function ProgramsPage() {
             )}
           </div>
         </motion.div>
+
+        {/* Sport Categories — only for exercise */}
+        {programType === ProgramType.exercise && <SportCategoriesSection />}
 
         {/* Sessions */}
         {isLoading ? (

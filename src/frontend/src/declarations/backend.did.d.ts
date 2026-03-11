@@ -10,9 +10,13 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
-export type ProgramType = { 'socialGathering' : null } |
+export type ProgramType = { 'boxCricket' : null } |
+  { 'socialGathering' : null } |
   { 'exercise' : null } |
+  { 'pickleball' : null } |
   { 'taskAllocation' : null } |
+  { 'tennis' : null } |
+  { 'badminton' : null } |
   { 'meetup' : null };
 export interface Session {
   'id' : bigint,
@@ -35,6 +39,7 @@ export interface Task {
   'sessionId' : bigint,
 }
 export type Time = bigint;
+export interface UserProfile { 'name' : string }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
@@ -52,16 +57,19 @@ export interface _SERVICE {
   'deleteSession' : ActorMethod<[bigint], undefined>,
   'getAllSessions' : ActorMethod<[], Array<Session>>,
   'getAllTasks' : ActorMethod<[], Array<Task>>,
+  'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getMySessions' : ActorMethod<[], [Array<Session>, Array<Session>]>,
   'getSession' : ActorMethod<[bigint], Session>,
   'getSessionsByProgramType' : ActorMethod<[ProgramType], Array<Session>>,
   'getTask' : ActorMethod<[bigint], Task>,
   'getTasksBySession' : ActorMethod<[bigint], Array<Task>>,
+  'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'joinSession' : ActorMethod<[bigint], undefined>,
   'leaveSession' : ActorMethod<[bigint], undefined>,
   'markTaskComplete' : ActorMethod<[bigint], undefined>,
+  'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

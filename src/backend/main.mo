@@ -9,12 +9,18 @@ import Principal "mo:core/Principal";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 
+
+
 actor {
   type ProgramType = {
     #meetup;
     #exercise;
     #socialGathering;
     #taskAllocation;
+    #boxCricket;
+    #pickleball;
+    #badminton;
+    #tennis;
   };
 
   type Session = {
@@ -39,6 +45,10 @@ actor {
     createdAt : Time.Time;
   };
 
+  public type UserProfile = {
+    name : Text;
+  };
+
   module Session {
     public func compare(session1 : Session, session2 : Session) : Order.Order {
       Nat.compare(session1.id, session2.id);
@@ -56,9 +66,33 @@ actor {
 
   let sessions = Map.empty<Nat, Session>();
   let tasks = Map.empty<Nat, Task>();
+  let userProfiles = Map.empty<Principal, UserProfile>();
   var nextSessionId = 0;
   var nextTaskId = 0;
 
+  // User Profile Functions
+  public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view profiles");
+    };
+    userProfiles.get(caller);
+  };
+
+  public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
+    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Can only view your own profile");
+    };
+    userProfiles.get(user);
+  };
+
+  public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can save profiles");
+    };
+    userProfiles.add(caller, profile);
+  };
+
+  // Session Functions
   public shared ({ caller }) func createSession(
     title : Text,
     description : Text,
@@ -151,6 +185,53 @@ actor {
     };
   };
 
+  public query ({ caller }) func getMySessions() : async ([Session], [Session]) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view sessions");
+    };
+
+    let createdSessionsIter = sessions.values().filter(
+      func(session) { session.creator == caller }
+    );
+
+    let joinedSessionsIter = sessions.values().filter(
+      func(session) { session.participants.values().any(func(p) { p == caller }) }
+    );
+
+    (createdSessionsIter.toArray().sort(), joinedSessionsIter.toArray().sort());
+  };
+
+  public query ({ caller }) func getSessionsByProgramType(programType : ProgramType) : async [Session] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view sessions");
+    };
+
+    let filteredIter = sessions.values().filter(
+      func(session) { session.programType == programType }
+    );
+    filteredIter.toArray().sort();
+  };
+
+  public query ({ caller }) func getSession(sessionId : Nat) : async Session {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view sessions");
+    };
+
+    switch (sessions.get(sessionId)) {
+      case (null) { Runtime.trap("Session does not exist") };
+      case (?session) { session };
+    };
+  };
+
+  public query ({ caller }) func getAllSessions() : async [Session] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view sessions");
+    };
+
+    sessions.values().toArray().sort();
+  };
+
+  // Task Functions
   public shared ({ caller }) func createTask(
     sessionId : Nat,
     title : Text,
@@ -213,33 +294,6 @@ actor {
     };
   };
 
-  public query ({ caller }) func getMySessions() : async ([Session], [Session]) {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can view sessions");
-    };
-
-    let createdSessionsIter = sessions.values().filter(
-      func(session) { session.creator == caller }
-    );
-
-    let joinedSessionsIter = sessions.values().filter(
-      func(session) { session.participants.values().any(func(p) { p == caller }) }
-    );
-
-    (createdSessionsIter.toArray().sort(), joinedSessionsIter.toArray().sort());
-  };
-
-  public query ({ caller }) func getSessionsByProgramType(programType : ProgramType) : async [Session] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can view sessions");
-    };
-
-    let filteredIter = sessions.values().filter(
-      func(session) { session.programType == programType }
-    );
-    filteredIter.toArray().sort();
-  };
-
   public query ({ caller }) func getTasksBySession(sessionId : Nat) : async [Task] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view tasks");
@@ -251,17 +305,6 @@ actor {
     filteredIter.toArray().sort();
   };
 
-  public query ({ caller }) func getSession(sessionId : Nat) : async Session {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can view sessions");
-    };
-
-    switch (sessions.get(sessionId)) {
-      case (null) { Runtime.trap("Session does not exist") };
-      case (?session) { session };
-    };
-  };
-
   public query ({ caller }) func getTask(taskId : Nat) : async Task {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view tasks");
@@ -271,14 +314,6 @@ actor {
       case (null) { Runtime.trap("Task does not exist") };
       case (?task) { task };
     };
-  };
-
-  public query ({ caller }) func getAllSessions() : async [Session] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can view sessions");
-    };
-
-    sessions.values().toArray().sort();
   };
 
   public query ({ caller }) func getAllTasks() : async [Task] {

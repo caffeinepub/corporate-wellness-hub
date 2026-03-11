@@ -28,10 +28,17 @@ export interface Session {
     dateTime: bigint;
 }
 export type Time = bigint;
+export interface UserProfile {
+    name: string;
+}
 export enum ProgramType {
+    boxCricket = "boxCricket",
     socialGathering = "socialGathering",
     exercise = "exercise",
+    pickleball = "pickleball",
     taskAllocation = "taskAllocation",
+    tennis = "tennis",
+    badminton = "badminton",
     meetup = "meetup"
 }
 export enum UserRole {
@@ -46,14 +53,17 @@ export interface backendInterface {
     deleteSession(sessionId: bigint): Promise<void>;
     getAllSessions(): Promise<Array<Session>>;
     getAllTasks(): Promise<Array<Task>>;
+    getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getMySessions(): Promise<[Array<Session>, Array<Session>]>;
     getSession(sessionId: bigint): Promise<Session>;
     getSessionsByProgramType(programType: ProgramType): Promise<Array<Session>>;
     getTask(taskId: bigint): Promise<Task>;
     getTasksBySession(sessionId: bigint): Promise<Array<Task>>;
+    getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     joinSession(sessionId: bigint): Promise<void>;
     leaveSession(sessionId: bigint): Promise<void>;
     markTaskComplete(taskId: bigint): Promise<void>;
+    saveCallerUserProfile(profile: UserProfile): Promise<void>;
 }

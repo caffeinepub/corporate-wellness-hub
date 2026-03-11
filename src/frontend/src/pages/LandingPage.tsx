@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Heart, Shield, Sparkles, Users } from "lucide-react";
 import { type Variants, motion } from "motion/react";
+import { ProgramType } from "../hooks/useQueries";
 import { PROGRAM_CONFIGS, PROGRAM_ORDER } from "../lib/programConfig";
 
 const containerVariants: Variants = {
@@ -21,6 +22,14 @@ const stats = [
   { icon: Sparkles, value: "180+", label: "Weekly sessions" },
   { icon: Heart, value: "94%", label: "Satisfaction rate" },
   { icon: Shield, value: "100%", label: "Safe & confidential" },
+];
+
+const EXERCISE_SPORT_PILLS = [
+  { emoji: "🏏", name: "Box Cricket" },
+  { emoji: "🏓", name: "Pickleball" },
+  { emoji: "🏸", name: "Badminton" },
+  { emoji: "🎾", name: "Tennis" },
+  { emoji: "🧘", name: "Yoga" },
 ];
 
 export function LandingPage() {
@@ -69,7 +78,7 @@ export function LandingPage() {
               <Link to="/programs/$type" params={{ type: "meetup" }}>
                 <Button
                   size="lg"
-                  data-ocid="hero.explore_button"
+                  data-ocid="hero.primary_button"
                   className="rounded-full px-7 text-base gap-2 shadow-lg"
                 >
                   Explore Programs
@@ -80,6 +89,7 @@ export function LandingPage() {
                 <Button
                   size="lg"
                   variant="outline"
+                  data-ocid="hero.secondary_button"
                   className="rounded-full px-7 text-base"
                 >
                   My Sessions
@@ -148,35 +158,30 @@ export function LandingPage() {
             <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-3">
               Choose your path to calm
             </h2>
-            <p className="text-muted-foreground max-w-lg mx-auto">
-              Four thoughtfully designed programs to help you reduce stress,
-              build connections, and reclaim your peace of mind.
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Eight thoughtfully designed programs — from mindful meetups and
+              social gatherings to sports like Box Cricket, Pickleball,
+              Badminton, and Tennis — helping you reduce stress and build real
+              connections.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
             {PROGRAM_ORDER.map((type, i) => {
               const cfg = PROGRAM_CONFIGS[type];
+              const isExercise = type === ProgramType.exercise;
               return (
                 <motion.div
                   key={type}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.1, duration: 0.45 }}
+                  transition={{ delay: i * 0.07, duration: 0.45 }}
                 >
                   <Link to="/programs/$type" params={{ type }}>
                     <div
-                      data-ocid={`programs.${
-                        type === "meetup"
-                          ? "meetup"
-                          : type === "exercise"
-                            ? "exercise"
-                            : type === "socialGathering"
-                              ? "social"
-                              : "task"
-                      }_card`}
-                      className="group relative bg-card rounded-2xl border border-border hover:border-primary/30 shadow-glow hover:shadow-xl transition-all duration-300 overflow-hidden p-6 cursor-pointer"
+                      data-ocid={`programs.${type}.card`}
+                      className="group relative bg-card rounded-2xl border border-border hover:border-primary/30 shadow-glow hover:shadow-xl transition-all duration-300 overflow-hidden p-6 cursor-pointer h-full"
                     >
                       {/* Background gradient */}
                       <div
@@ -197,6 +202,26 @@ export function LandingPage() {
                         <p className="text-sm text-muted-foreground leading-relaxed mb-4">
                           {cfg.description}
                         </p>
+
+                        {/* Sport pills for exercise card */}
+                        {isExercise && (
+                          <div className="flex flex-wrap gap-1.5 mb-4">
+                            {EXERCISE_SPORT_PILLS.map((sport) => (
+                              <span
+                                key={sport.name}
+                                className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border ${cfg.badgeClass}`}
+                              >
+                                {sport.emoji} {sport.name}
+                              </span>
+                            ))}
+                            <span
+                              className={`inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full border ${cfg.badgeClass} opacity-70`}
+                            >
+                              +2 more
+                            </span>
+                          </div>
+                        )}
+
                         <div
                           className={`inline-flex items-center gap-1.5 text-xs font-medium ${cfg.textClass}`}
                         >
@@ -237,7 +262,7 @@ export function LandingPage() {
                   size="lg"
                   variant="secondary"
                   className="rounded-full px-8"
-                  data-ocid="hero.explore_button"
+                  data-ocid="cta.primary_button"
                 >
                   Browse All Programs
                   <ArrowRight className="w-4 h-4 ml-2" />
