@@ -10,9 +10,9 @@ export function Footer() {
   return (
     <footer className="border-t border-border/50 bg-muted/30 mt-20">
       <div className="container max-w-6xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
-          <div className="space-y-3">
+          <div className="space-y-3 md:col-span-1">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
                 <Leaf className="w-3.5 h-3.5 text-primary-foreground" />
@@ -51,7 +51,7 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Links */}
+          {/* Explore */}
           <div>
             <h3 className="text-sm font-semibold text-foreground mb-3">
               Explore
@@ -71,6 +71,47 @@ export function Footer() {
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   My Sessions
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/meetup-activities"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Mindfully Meetup
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Company */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">
+              Company
+            </h3>
+            <ul className="space-y-2">
+              <li>
+                <Link
+                  to="/about"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/contact"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Contact Us
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/careers"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Careers
                 </Link>
               </li>
             </ul>

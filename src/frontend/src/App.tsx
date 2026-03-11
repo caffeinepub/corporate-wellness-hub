@@ -9,11 +9,16 @@ import {
 } from "@tanstack/react-router";
 import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
+import { AboutPage } from "./pages/AboutPage";
+import { CareersPage } from "./pages/CareersPage";
+import { ContactPage } from "./pages/ContactPage";
 import { LandingPage } from "./pages/LandingPage";
 import { MindfulMeetupPage } from "./pages/MindfulMeetupPage";
 import { MySessionsPage } from "./pages/MySessionsPage";
 import { ProgramsPage } from "./pages/ProgramsPage";
 import { SessionDetailPage } from "./pages/SessionDetailPage";
+import { SocialGatheringPage } from "./pages/SocialGatheringPage";
+import { TaskSharingPage } from "./pages/TaskSharingPage";
 
 // ─── Root Layout ─────────────────────────────────────────────────
 const rootRoute = createRootRoute({
@@ -60,6 +65,36 @@ const meetupActivitiesRoute = createRoute({
   component: MindfulMeetupPage,
 });
 
+const socialActivitiesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/social-activities",
+  component: SocialGatheringPage,
+});
+
+const taskActivitiesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/task-activities",
+  component: TaskSharingPage,
+});
+
+const aboutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/about",
+  component: AboutPage,
+});
+
+const contactRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/contact",
+  component: ContactPage,
+});
+
+const careersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/careers",
+  component: CareersPage,
+});
+
 // Redirect /programs -> /programs/meetup
 const programsRedirectRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -78,6 +113,11 @@ const routeTree = rootRoute.addChildren([
   sessionDetailRoute,
   mySessionsRoute,
   meetupActivitiesRoute,
+  socialActivitiesRoute,
+  taskActivitiesRoute,
+  aboutRoute,
+  contactRoute,
+  careersRoute,
 ]);
 
 const router = createRouter({ routeTree });

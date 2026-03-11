@@ -88,6 +88,42 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              <Link
+                to="/about"
+                data-ocid="nav.about_link"
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive("/about")
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                About
+              </Link>
+
+              <Link
+                to="/contact"
+                data-ocid="nav.contact_link"
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive("/contact")
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                Contact
+              </Link>
+
+              <Link
+                to="/careers"
+                data-ocid="nav.careers_link"
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive("/careers")
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                Careers
+              </Link>
+
               {isAuthenticated && (
                 <Link
                   to="/my-sessions"
@@ -192,6 +228,33 @@ export function Navbar() {
                     </Link>
                   );
                 })}
+                <div className="px-3 py-1 text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider">
+                  Company
+                </div>
+                <Link
+                  to="/about"
+                  data-ocid="nav.about_link"
+                  className="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  About Us
+                </Link>
+                <Link
+                  to="/contact"
+                  data-ocid="nav.contact_link"
+                  className="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Contact Us
+                </Link>
+                <Link
+                  to="/careers"
+                  data-ocid="nav.careers_link"
+                  className="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Careers
+                </Link>
                 {isAuthenticated && (
                   <Link
                     to="/my-sessions"
