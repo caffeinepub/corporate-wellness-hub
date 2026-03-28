@@ -81,6 +81,14 @@ export function Footer() {
                   Mindfully Meetup
                 </Link>
               </li>
+              <li>
+                <Link
+                  to="/groups"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Groups
+                </Link>
+              </li>
             </ul>
           </div>
 

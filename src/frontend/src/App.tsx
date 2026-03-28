@@ -13,6 +13,10 @@ import { AboutPage } from "./pages/AboutPage";
 import { CareersPage } from "./pages/CareersPage";
 import { ComingSoonPage } from "./pages/ComingSoonPage";
 import { ContactPage } from "./pages/ContactPage";
+import { DashboardPage } from "./pages/DashboardPage";
+import { DiscussPage } from "./pages/DiscussPage";
+import { GroupDetailPage } from "./pages/GroupDetailPage";
+import { GroupsPage } from "./pages/GroupsPage";
 import { LandingPage } from "./pages/LandingPage";
 import { MembershipPage } from "./pages/MembershipPage";
 import { MindfulMeetupPage } from "./pages/MindfulMeetupPage";
@@ -20,6 +24,7 @@ import { MySessionsPage } from "./pages/MySessionsPage";
 import { ProgramsPage } from "./pages/ProgramsPage";
 import { PsychologistsPage } from "./pages/PsychologistsPage";
 import { SessionDetailPage } from "./pages/SessionDetailPage";
+import { SignInPage } from "./pages/SignInPage";
 import { SocialGatheringPage } from "./pages/SocialGatheringPage";
 import { TaskSharingPage } from "./pages/TaskSharingPage";
 
@@ -116,6 +121,36 @@ const comingSoonRoute = createRoute({
   component: ComingSoonPage,
 });
 
+const signInRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/signin",
+  component: SignInPage,
+});
+
+const dashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/dashboard",
+  component: DashboardPage,
+});
+
+const groupsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/groups",
+  component: GroupsPage,
+});
+
+const groupDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/groups/$topic",
+  component: GroupDetailPage,
+});
+
+const discussRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/discuss",
+  component: DiscussPage,
+});
+
 // Redirect /programs -> /programs/meetup
 const programsRedirectRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -142,6 +177,11 @@ const routeTree = rootRoute.addChildren([
   membershipRoute,
   psychologistsRoute,
   comingSoonRoute,
+  signInRoute,
+  dashboardRoute,
+  groupsRoute,
+  groupDetailRoute,
+  discussRoute,
 ]);
 
 const router = createRouter({ routeTree });

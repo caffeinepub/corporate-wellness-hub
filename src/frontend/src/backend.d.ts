@@ -31,6 +31,19 @@ export type Time = bigint;
 export interface UserProfile {
     name: string;
 }
+export interface AdminStats {
+    totalSessions: bigint;
+    totalUsers: bigint;
+    totalTasks: bigint;
+    completedTasks: bigint;
+    sessionsByType: Array<[string, bigint]>;
+}
+export interface UserProfileEntry {
+    principal: Principal;
+    name: string;
+    sessionsCreated: bigint;
+    sessionsJoined: bigint;
+}
 export enum ProgramType {
     boxCricket = "boxCricket",
     socialGathering = "socialGathering",
@@ -53,6 +66,8 @@ export interface backendInterface {
     deleteSession(sessionId: bigint): Promise<void>;
     getAllSessions(): Promise<Array<Session>>;
     getAllTasks(): Promise<Array<Task>>;
+    getAdminStats(): Promise<AdminStats>;
+    getAllUserProfiles(): Promise<Array<UserProfileEntry>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getMySessions(): Promise<[Array<Session>, Array<Session>]>;

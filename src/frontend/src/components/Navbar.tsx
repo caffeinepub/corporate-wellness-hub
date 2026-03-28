@@ -1,35 +1,53 @@
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Link, useLocation } from "@tanstack/react-router";
 import {
   ChevronDown,
+  Gauge,
   Leaf,
   LogIn,
   LogOut,
   Menu,
+  Shield,
   Sparkles,
   Stethoscope,
   User,
+  Users,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useIsAdmin, useUserProfile } from "../hooks/useQueries";
 import { PROGRAM_CONFIGS, PROGRAM_ORDER } from "../lib/programConfig";
 
 export function Navbar() {
   const location = useLocation();
-  const { identity, login, clear, isLoggingIn, isInitializing } =
+  const { identity, clear, isLoggingIn, isInitializing } =
     useInternetIdentity();
   const isAuthenticated = !!identity;
+  const { data: profile } = useUserProfile();
+  const { data: isAdmin } = useIsAdmin();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isActive = (path: string) => location.pathname.startsWith(path);
+
+  const initials = profile?.name
+    ? profile.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : null;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -159,6 +177,19 @@ export function Navbar() {
               </Link>
 
               <Link
+                to="/groups"
+                data-ocid="nav.groups_link"
+                className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive("/groups")
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                Groups
+              </Link>
+
+              <Link
                 to="/coming-soon"
                 data-ocid="nav.coming_soon_link"
                 className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -189,35 +220,90 @@ export function Navbar() {
             {/* Auth + Mobile toggle */}
             <div className="flex items-center gap-2">
               {isAuthenticated ? (
-                <div className="hidden md:flex items-center gap-2">
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/50 text-accent-foreground text-xs font-medium">
-                    <User className="w-3.5 h-3.5" />
-                    <span className="max-w-[80px] truncate">
-                      {identity.getPrincipal().toString().slice(0, 8)}…
-                    </span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clear}
-                    data-ocid="nav.login_button"
-                    className="text-muted-foreground hover:text-destructive"
-                  >
-                    <LogOut className="w-4 h-4 mr-1" />
-                    Sign out
-                  </Button>
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="hidden md:flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-muted transition-colors"
+                      data-ocid="nav.toggle"
+                    >
+                      <div className="relative">
+                        <Avatar className="w-7 h-7">
+                          <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+                            {initials ?? <User className="w-3.5 h-3.5" />}
+                          </AvatarFallback>
+                        </Avatar>
+                        {isAdmin && (
+                          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full flex items-center justify-center">
+                            <Shield className="w-2 h-2 text-white" />
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-medium text-foreground max-w-[80px] truncate">
+                          {profile?.name ?? "Account"}
+                        </span>
+                        {isAdmin && (
+                          <Badge className="bg-emerald-500 text-white text-[10px] px-1.5 py-0 h-4">
+                            Admin
+                          </Badge>
+                        )}
+                      </div>
+                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to="/dashboard"
+                        className="flex items-center gap-2"
+                        data-ocid="nav.dashboard_link"
+                      >
+                        {isAdmin ? (
+                          <Shield className="w-4 h-4 text-emerald-600" />
+                        ) : (
+                          <Gauge className="w-4 h-4" />
+                        )}
+                        {isAdmin ? "Admin Dashboard" : "Dashboard"}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to="/my-sessions"
+                        className="flex items-center gap-2"
+                        data-ocid="nav.my_sessions_link"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        My Sessions
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={clear}
+                      className="flex items-center gap-2 text-destructive focus:text-destructive"
+                      data-ocid="nav.logout_button"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ) : (
-                <Button
-                  size="sm"
-                  onClick={login}
-                  disabled={isLoggingIn || isInitializing}
-                  data-ocid="nav.login_button"
-                  className="hidden md:flex"
+                <Link
+                  to="/signin"
+                  className="hidden md:block"
+                  data-ocid="nav.signin_link"
                 >
-                  <LogIn className="w-4 h-4 mr-1.5" />
-                  {isLoggingIn ? "Connecting…" : "Sign in"}
-                </Button>
+                  <Button
+                    size="sm"
+                    disabled={isLoggingIn || isInitializing}
+                    data-ocid="nav.login_button"
+                    className="rounded-full"
+                  >
+                    <LogIn className="w-4 h-4 mr-1.5" />
+                    {isLoggingIn ? "Connecting…" : "Sign in"}
+                  </Button>
+                </Link>
               )}
 
               {/* Mobile hamburger */}
@@ -320,6 +406,15 @@ export function Navbar() {
                   Psychologists
                 </Link>
                 <Link
+                  to="/groups"
+                  data-ocid="nav.groups_link"
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <Users className="w-4 h-4" />
+                  Groups
+                </Link>
+                <Link
                   to="/coming-soon"
                   data-ocid="nav.coming_soon_link"
                   className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -329,14 +424,34 @@ export function Navbar() {
                   Co-Work Spaces
                 </Link>
                 {isAuthenticated && (
-                  <Link
-                    to="/my-sessions"
-                    data-ocid="nav.my_sessions_link"
-                    className="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    My Sessions
-                  </Link>
+                  <>
+                    <Link
+                      to="/dashboard"
+                      data-ocid="nav.dashboard_link"
+                      className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      {isAdmin ? (
+                        <Shield className="w-4 h-4 text-emerald-600" />
+                      ) : (
+                        <Gauge className="w-4 h-4" />
+                      )}
+                      {isAdmin ? "Admin Dashboard" : "Dashboard"}
+                      {isAdmin && (
+                        <Badge className="bg-emerald-500 text-white text-[10px] px-1.5 py-0 h-4 ml-auto">
+                          Admin
+                        </Badge>
+                      )}
+                    </Link>
+                    <Link
+                      to="/my-sessions"
+                      data-ocid="nav.my_sessions_link"
+                      className="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      My Sessions
+                    </Link>
+                  </>
                 )}
                 <div className="pt-2 border-t border-border/50">
                   {isAuthenticated ? (
@@ -347,23 +462,26 @@ export function Navbar() {
                         clear();
                         setMobileOpen(false);
                       }}
+                      data-ocid="nav.logout_button"
                     >
                       <LogOut className="w-4 h-4 mr-2" />
                       Sign out
                     </Button>
                   ) : (
-                    <Button
-                      className="w-full"
-                      onClick={() => {
-                        login();
-                        setMobileOpen(false);
-                      }}
-                      disabled={isLoggingIn || isInitializing}
-                      data-ocid="nav.login_button"
+                    <Link
+                      to="/signin"
+                      onClick={() => setMobileOpen(false)}
+                      data-ocid="nav.signin_link"
                     >
-                      <LogIn className="w-4 h-4 mr-2" />
-                      {isLoggingIn ? "Connecting…" : "Sign in"}
-                    </Button>
+                      <Button
+                        className="w-full"
+                        disabled={isLoggingIn || isInitializing}
+                        data-ocid="nav.login_button"
+                      >
+                        <LogIn className="w-4 h-4 mr-2" />
+                        {isLoggingIn ? "Connecting…" : "Sign in"}
+                      </Button>
+                    </Link>
                   )}
                 </div>
               </div>

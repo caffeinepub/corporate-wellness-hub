@@ -323,4 +323,65 @@ actor {
 
     tasks.values().toArray().sort();
   };
+
+  public type AdminStats = {
+    totalSessions : Nat;
+    totalUsers : Nat;
+    totalTasks : Nat;
+    completedTasks : Nat;
+    sessionsByType : [(Text, Nat)];
+  };
+
+  public type UserProfileEntry = {
+    principal : Principal;
+    name : Text;
+    sessionsCreated : Nat;
+    sessionsJoined : Nat;
+  };
+
+  public query ({ caller }) func getAdminStats() : async AdminStats {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can view admin stats");
+    };
+
+    let allSessions = sessions.values().toArray();
+    let allTasks = tasks.values().toArray();
+
+    let meetupCount = allSessions.values().filter(func(s) { s.programType == #meetup }).toArray().size();
+    let exerciseCount = allSessions.values().filter(func(s) { s.programType == #exercise }).toArray().size();
+    let socialCount = allSessions.values().filter(func(s) { s.programType == #socialGathering }).toArray().size();
+    let taskCount = allSessions.values().filter(func(s) { s.programType == #taskAllocation }).toArray().size();
+
+    {
+      totalSessions = allSessions.size();
+      totalUsers = accessControlState.userRoles.size();
+      totalTasks = allTasks.size();
+      completedTasks = allTasks.values().filter(func(t) { t.completed }).toArray().size();
+      sessionsByType = [
+        ("Meetup", meetupCount),
+        ("Exercise", exerciseCount),
+        ("Social Gathering", socialCount),
+        ("Task Allocation", taskCount),
+      ];
+    };
+  };
+
+  public query ({ caller }) func getAllUserProfiles() : async [UserProfileEntry] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can view all user profiles");
+    };
+
+    let allSessions = sessions.values().toArray();
+
+    userProfiles.entries().map(func((p, profile)) {
+      let created = allSessions.values().filter(func(s) { s.creator == p }).toArray().size();
+      let joined = allSessions.values().filter(func(s) { s.participants.values().any(func(part) { part == p }) }).toArray().size();
+      {
+        principal = p;
+        name = profile.name;
+        sessionsCreated = created;
+        sessionsJoined = joined;
+      };
+    }).toArray();
+  };
 };

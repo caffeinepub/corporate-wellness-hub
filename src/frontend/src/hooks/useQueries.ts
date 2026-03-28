@@ -1,9 +1,17 @@
 import type { Principal } from "@icp-sdk/core/principal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ProgramType, type Session, type Task } from "../backend.d";
+import {
+  type AdminStats,
+  ProgramType,
+  type Session,
+  type Task,
+  type UserProfile,
+  type UserProfileEntry,
+} from "../backend.d";
 import { useActor } from "./useActor";
 
 export { ProgramType };
+export type { AdminStats, UserProfileEntry };
 
 // ─── Session Queries ──────────────────────────────────────────────
 
@@ -51,6 +59,74 @@ export function useMySessions() {
     queryFn: async () => {
       if (!actor) return [[], []];
       return actor.getMySessions();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// ─── User Profile ────────────────────────────────────────────────
+
+export function useUserProfile() {
+  const { actor, isFetching } = useActor();
+  return useQuery<UserProfile | null>({
+    queryKey: ["user-profile"],
+    queryFn: async () => {
+      if (!actor) return null;
+      return actor.getCallerUserProfile();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useSaveUserProfile() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (profile: UserProfile) => {
+      if (!actor) throw new Error("Not authenticated");
+      return actor.saveCallerUserProfile(profile);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["user-profile"] });
+    },
+  });
+}
+
+// ─── Admin Queries ───────────────────────────────────────────────
+
+export function useIsAdmin() {
+  const { actor, isFetching } = useActor();
+  return useQuery<boolean>({
+    queryKey: ["is-admin"],
+    queryFn: async () => {
+      if (!actor) return false;
+      return actor.isCallerAdmin();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useAdminStats() {
+  const { actor, isFetching } = useActor();
+  return useQuery<AdminStats>({
+    queryKey: ["admin-stats"],
+    queryFn: async () => {
+      if (!actor) throw new Error("No actor");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (actor as any).getAdminStats() as Promise<AdminStats>;
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useAllUserProfilesAdmin() {
+  const { actor, isFetching } = useActor();
+  return useQuery<UserProfileEntry[]>({
+    queryKey: ["admin-user-profiles"],
+    queryFn: async () => {
+      if (!actor) return [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (actor as any).getAllUserProfiles() as Promise<UserProfileEntry[]>;
     },
     enabled: !!actor && !isFetching,
   });
