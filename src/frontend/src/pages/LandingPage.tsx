@@ -156,6 +156,56 @@ export function LandingPage() {
       {/* ─── Stress Banner ───────────────────────────────────── */}
       <StressBanner />
 
+      {/* ─── Programs at a Glance ────────────────────────────── */}
+      <section className="py-12 bg-muted/20">
+        <div className="container max-w-6xl mx-auto px-4">
+          <motion.h2
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-xl font-display font-semibold text-foreground text-center mb-8"
+          >
+            Programs at a Glance
+          </motion.h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            {[
+              {
+                label: "Mindful Meetup",
+                src: "/assets/generated/activity-mindful-meetup.dim_800x450.jpg",
+              },
+              {
+                label: "Movement & Sports",
+                src: "/assets/generated/activity-movement-sports.dim_800x450.jpg",
+              },
+              {
+                label: "Social Gathering",
+                src: "/assets/generated/activity-social-gathering.dim_800x450.jpg",
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={item.label}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.4 }}
+                className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+              >
+                <img
+                  src={item.src}
+                  alt={item.label}
+                  className="w-full h-40 object-cover"
+                />
+                <div className="px-4 py-3">
+                  <p className="text-sm font-semibold text-foreground text-center">
+                    {item.label}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ─── Programs Grid ────────────────────────────────────── */}
       <section className="py-20">
         <div className="container max-w-6xl mx-auto px-4">

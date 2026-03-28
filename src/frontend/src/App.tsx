@@ -11,6 +11,7 @@ import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
 import { AboutPage } from "./pages/AboutPage";
 import { CareersPage } from "./pages/CareersPage";
+import { ComingSoonPage } from "./pages/ComingSoonPage";
 import { ContactPage } from "./pages/ContactPage";
 import { LandingPage } from "./pages/LandingPage";
 import { MembershipPage } from "./pages/MembershipPage";
@@ -109,6 +110,12 @@ const psychologistsRoute = createRoute({
   component: PsychologistsPage,
 });
 
+const comingSoonRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/coming-soon",
+  component: ComingSoonPage,
+});
+
 // Redirect /programs -> /programs/meetup
 const programsRedirectRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -134,6 +141,7 @@ const routeTree = rootRoute.addChildren([
   careersRoute,
   membershipRoute,
   psychologistsRoute,
+  comingSoonRoute,
 ]);
 
 const router = createRouter({ routeTree });

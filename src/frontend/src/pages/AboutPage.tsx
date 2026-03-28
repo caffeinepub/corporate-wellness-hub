@@ -78,6 +78,7 @@ const team = [
     role: "Wellness Lead",
     bio: "Former organizational psychologist who saw burnout firsthand across three large companies. Built this hub to be the resource she wished had existed.",
     color: "bg-accent/60",
+    image: "/assets/generated/team-priya-mehta.dim_300x300.jpg",
   },
   {
     initials: "RK",
@@ -85,6 +86,7 @@ const team = [
     role: "Community Architect",
     bio: "Designed team rituals at startups and enterprises alike. Believes even a five-minute chai break can rebuild a fractured team dynamic.",
     color: "bg-[oklch(0.88_0.07_175/0.6)]",
+    image: "/assets/generated/team-rohan-kapoor.dim_300x300.jpg",
   },
   {
     initials: "SA",
@@ -92,6 +94,7 @@ const team = [
     role: "Program Curator",
     bio: "Trained mindfulness facilitator and sports enthusiast. She personally runs Chai Pe Charcha sessions every Friday.",
     color: "bg-[oklch(0.9_0.07_280/0.5)]",
+    image: "/assets/generated/team-sneha-agarwal.dim_300x300.jpg",
   },
 ];
 
@@ -345,11 +348,11 @@ export function AboutPage() {
                 transition={{ delay: i * 0.1, duration: 0.45 }}
                 className="bg-card rounded-2xl border border-border p-6 text-center hover:shadow-md transition-shadow"
               >
-                <div
-                  className={`w-16 h-16 rounded-full ${member.color} flex items-center justify-center mx-auto mb-4 text-xl font-display font-bold text-foreground`}
-                >
-                  {member.initials}
-                </div>
+                <img
+                  src={member.image}
+                  alt={member.name}
+                  className="w-16 h-16 rounded-full object-cover mx-auto mb-4 shadow-sm"
+                />
                 <h3 className="font-display font-semibold text-foreground mb-0.5">
                   {member.name}
                 </h3>

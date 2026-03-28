@@ -35,6 +35,7 @@ interface Doctor {
   name: string;
   initials: string;
   color: string;
+  image: string;
   credentials: string;
   specialties: Specialty[];
   experience: string;
@@ -53,6 +54,7 @@ const DOCTORS: Doctor[] = [
     name: "Dr. Priya Sharma",
     initials: "PS",
     color: "oklch(0.72 0.14 175)",
+    image: "/assets/generated/doctor-priya-sharma.dim_300x300.jpg",
     credentials: "PhD in Clinical Psychology",
     specialties: ["Stress & Burnout", "Anxiety"],
     experience: "12 years experience",
@@ -75,6 +77,7 @@ const DOCTORS: Doctor[] = [
     name: "Dr. Ankit Mehta",
     initials: "AM",
     color: "oklch(0.62 0.16 265)",
+    image: "/assets/generated/doctor-ankit-mehta.dim_300x300.jpg",
     credentials: "M.D. Psychiatry",
     specialties: ["Depression", "Anxiety"],
     experience: "9 years experience",
@@ -94,6 +97,7 @@ const DOCTORS: Doctor[] = [
     name: "Dr. Sarah Collins",
     initials: "SC",
     color: "oklch(0.65 0.18 30)",
+    image: "/assets/generated/doctor-sarah-collins.dim_300x300.jpg",
     credentials: "MSc Counselling Psychology",
     specialties: ["Work-Life Balance", "Stress & Burnout"],
     experience: "7 years experience",
@@ -113,6 +117,7 @@ const DOCTORS: Doctor[] = [
     name: "Dr. Rohan Nair",
     initials: "RN",
     color: "oklch(0.60 0.14 155)",
+    image: "/assets/generated/doctor-rohan-nair.dim_300x300.jpg",
     credentials: "PhD in Organisational Psychology",
     specialties: ["Performance Coaching", "Work-Life Balance"],
     experience: "14 years experience",
@@ -135,6 +140,7 @@ const DOCTORS: Doctor[] = [
     name: "Dr. Emily Chen",
     initials: "EC",
     color: "oklch(0.68 0.16 75)",
+    image: "/assets/generated/doctor-emily-chen.dim_300x300.jpg",
     credentials: "PsyD Clinical Psychology",
     specialties: ["Anxiety", "Performance Coaching"],
     experience: "11 years experience",
@@ -154,6 +160,7 @@ const DOCTORS: Doctor[] = [
     name: "Dr. Vikram Das",
     initials: "VD",
     color: "oklch(0.55 0.14 200)",
+    image: "/assets/generated/doctor-vikram-das.dim_300x300.jpg",
     credentials: "M.Phil in Psychiatry",
     specialties: ["Stress & Burnout", "Depression"],
     experience: "16 years experience",
@@ -173,6 +180,7 @@ const DOCTORS: Doctor[] = [
     name: "Dr. Aisha Khan",
     initials: "AK",
     color: "oklch(0.62 0.17 350)",
+    image: "/assets/generated/doctor-aisha-khan.dim_300x300.jpg",
     credentials: "MSc Clinical Mental Health",
     specialties: ["Work-Life Balance", "Anxiety"],
     experience: "8 years experience",
@@ -192,6 +200,7 @@ const DOCTORS: Doctor[] = [
     name: "Dr. James Wright",
     initials: "JW",
     color: "oklch(0.58 0.13 240)",
+    image: "/assets/generated/doctor-james-wright.dim_300x300.jpg",
     credentials: "PhD Cognitive Behavioural Therapy",
     specialties: ["Performance Coaching", "Stress & Burnout"],
     experience: "10 years experience",
@@ -258,12 +267,11 @@ function BookingModal({
 
       {/* Doctor info */}
       <div className="flex items-center gap-3 py-2">
-        <div
-          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-          style={{ background: doctor.color }}
-        >
-          {doctor.initials}
-        </div>
+        <img
+          src={doctor.image}
+          alt={doctor.name}
+          className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+        />
         <div>
           <p className="font-semibold text-foreground">{doctor.name}</p>
           <p className="text-xs text-muted-foreground">{doctor.credentials}</p>
@@ -381,12 +389,11 @@ function DoctorCard({ doctor, index }: { doctor: Doctor; index: number }) {
       >
         {/* Header */}
         <div className="flex items-start gap-3">
-          <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-sm"
-            style={{ background: doctor.color }}
-          >
-            {doctor.initials}
-          </div>
+          <img
+            src={doctor.image}
+            alt={doctor.name}
+            className="w-14 h-14 rounded-2xl object-cover flex-shrink-0 shadow-sm"
+          />
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-foreground text-base leading-tight">
               {doctor.name}

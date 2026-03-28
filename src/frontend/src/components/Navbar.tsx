@@ -12,6 +12,7 @@ import {
   LogIn,
   LogOut,
   Menu,
+  Sparkles,
   Stethoscope,
   User,
   X,
@@ -155,6 +156,19 @@ export function Navbar() {
                 }`}
               >
                 Psychologists
+              </Link>
+
+              <Link
+                to="/coming-soon"
+                data-ocid="nav.coming_soon_link"
+                className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive("/coming-soon")
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                Co-Work Spaces
               </Link>
 
               {isAuthenticated && (
@@ -304,6 +318,15 @@ export function Navbar() {
                 >
                   <Stethoscope className="w-4 h-4" />
                   Psychologists
+                </Link>
+                <Link
+                  to="/coming-soon"
+                  data-ocid="nav.coming_soon_link"
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Co-Work Spaces
                 </Link>
                 {isAuthenticated && (
                   <Link
