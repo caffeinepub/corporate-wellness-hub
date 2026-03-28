@@ -1,42 +1,27 @@
-# Stress Relief Hub
+# Corporate Wellness Hub
 
 ## Current State
-New project. No existing code.
+LandingPage has: Hero, Stats bar, Programs Grid, CTA Banner. No stress awareness section exists.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Landing page with a calming hero section introducing the platform
-- Programs section with 4 program types: Meetup Program, Exercise Program, Social Gathering, Task Allocation
-- Each program has a list of available sessions/events with title, description, date/time, and participant count
-- Users can browse programs without logging in
-- Authenticated users can register for a program session
-- Authenticated users can create their own sessions under any program type
-- My Sessions dashboard for logged-in users: view sessions they joined or created
-- Task Allocation program: users can create tasks and assign them to themselves or others in a group session
-- Participant count tracking per session
-- Authorization (login/signup) for managing sessions
+- A new `StressBanner` component inserted between the Stats bar and Programs Grid on the LandingPage
+- The banner is a full-width section with an auto-advancing slideshow (manual prev/next + dot nav)
+- Slides:
+  1. "What Is Stress?" – definition, types (acute/chronic/episodic)
+  2. "The Corporate Stress Epidemic" – stats: 83% US workers suffer from work-related stress (Statista 2023), 1M employees absent every day due to stress (AIS)
+  3. "How Stress Impacts Employees" – physical, mental, behavioral effects with icons
+  4. "The Numbers Don't Lie" – data-heavy slide: 77% experience physical symptoms, 73% psychological symptoms, $300B annual cost to US employers, 120K deaths per year attributable to work stress
+  5. "Industries Hit Hardest" – bar/visual showing Finance 79%, Healthcare 74%, Tech 69%, Manufacturing 60% stress rate
+  6. "The Burnout Spiral" – shows how unmanaged stress leads to burnout → disengagement → turnover
 
 ### Modify
-- N/A (new project)
+- LandingPage.tsx: import and render `<StressBanner />` between stats and programs sections
 
 ### Remove
-- N/A (new project)
+- Nothing removed
 
 ## Implementation Plan
-1. Backend:
-   - User authorization (login/signup)
-   - Program types: enum (Meetup, Exercise, SocialGathering, TaskAllocation)
-   - Sessions: create, list by program, get detail, join, leave
-   - Tasks (for TaskAllocation sessions): create task, list tasks per session, mark complete
-   - Participant management per session
-
-2. Frontend:
-   - Navigation bar with login/signup
-   - Landing hero section
-   - Programs overview page with cards for each program type
-   - Session list page per program type
-   - Session detail page: description, date/time, participants, join/leave button
-   - Create session form (authenticated)
-   - My Sessions dashboard
-   - Task list within a TaskAllocation session (create, complete tasks)
+1. Create `src/frontend/src/components/StressBanner.tsx` with fully self-contained slide data, auto-play (5s), prev/next controls, progress bar, dot indicators
+2. Update `LandingPage.tsx` to import and render `<StressBanner />`

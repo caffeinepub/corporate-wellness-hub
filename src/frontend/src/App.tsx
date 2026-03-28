@@ -13,9 +13,11 @@ import { AboutPage } from "./pages/AboutPage";
 import { CareersPage } from "./pages/CareersPage";
 import { ContactPage } from "./pages/ContactPage";
 import { LandingPage } from "./pages/LandingPage";
+import { MembershipPage } from "./pages/MembershipPage";
 import { MindfulMeetupPage } from "./pages/MindfulMeetupPage";
 import { MySessionsPage } from "./pages/MySessionsPage";
 import { ProgramsPage } from "./pages/ProgramsPage";
+import { PsychologistsPage } from "./pages/PsychologistsPage";
 import { SessionDetailPage } from "./pages/SessionDetailPage";
 import { SocialGatheringPage } from "./pages/SocialGatheringPage";
 import { TaskSharingPage } from "./pages/TaskSharingPage";
@@ -34,7 +36,7 @@ const rootRoute = createRootRoute({
   ),
 });
 
-// ─── Routes ──────────────────────────────────────────────────────
+// ─── Routes ───────────────────────────────────────────────────────
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
@@ -95,6 +97,18 @@ const careersRoute = createRoute({
   component: CareersPage,
 });
 
+const membershipRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/membership",
+  component: MembershipPage,
+});
+
+const psychologistsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/psychologists",
+  component: PsychologistsPage,
+});
+
 // Redirect /programs -> /programs/meetup
 const programsRedirectRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -105,7 +119,7 @@ const programsRedirectRoute = createRoute({
   component: () => null,
 });
 
-// ─── Router ──────────────────────────────────────────────────────
+// ─── Router ─────────────────────────────────────────────────────
 const routeTree = rootRoute.addChildren([
   indexRoute,
   programsRoute,
@@ -118,6 +132,8 @@ const routeTree = rootRoute.addChildren([
   aboutRoute,
   contactRoute,
   careersRoute,
+  membershipRoute,
+  psychologistsRoute,
 ]);
 
 const router = createRouter({ routeTree });

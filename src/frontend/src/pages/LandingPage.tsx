@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Heart, Shield, Sparkles, Users } from "lucide-react";
 import { type Variants, motion } from "motion/react";
+import { StressBanner } from "../components/StressBanner";
 import { ProgramType } from "../hooks/useQueries";
 import { PROGRAM_CONFIGS, PROGRAM_ORDER } from "../lib/programConfig";
 
@@ -151,6 +152,9 @@ export function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ─── Stress Banner ───────────────────────────────────── */}
+      <StressBanner />
 
       {/* ─── Programs Grid ────────────────────────────────────── */}
       <section className="py-20">

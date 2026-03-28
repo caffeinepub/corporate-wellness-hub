@@ -6,7 +6,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Link, useLocation } from "@tanstack/react-router";
-import { ChevronDown, Leaf, LogIn, LogOut, Menu, User, X } from "lucide-react";
+import {
+  ChevronDown,
+  Leaf,
+  LogIn,
+  LogOut,
+  Menu,
+  Stethoscope,
+  User,
+  X,
+} from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
@@ -122,6 +131,30 @@ export function Navbar() {
                 }`}
               >
                 Careers
+              </Link>
+
+              <Link
+                to="/membership"
+                data-ocid="nav.membership_link"
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive("/membership")
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                Membership
+              </Link>
+
+              <Link
+                to="/psychologists"
+                data-ocid="nav.psychologists_link"
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive("/psychologists")
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                Psychologists
               </Link>
 
               {isAuthenticated && (
@@ -254,6 +287,23 @@ export function Navbar() {
                   onClick={() => setMobileOpen(false)}
                 >
                   Careers
+                </Link>
+                <Link
+                  to="/membership"
+                  data-ocid="nav.membership_link"
+                  className="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Membership
+                </Link>
+                <Link
+                  to="/psychologists"
+                  data-ocid="nav.psychologists_link"
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <Stethoscope className="w-4 h-4" />
+                  Psychologists
                 </Link>
                 {isAuthenticated && (
                   <Link
