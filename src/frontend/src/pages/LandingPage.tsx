@@ -213,7 +213,7 @@ export function LandingPage() {
                             key={sport.name}
                             className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border ${cfg.badgeClass}`}
                           >
-                            {sport.emoji} {sport.name}
+                            {sport.emoji}
                           </span>
                         ))}
                         <span

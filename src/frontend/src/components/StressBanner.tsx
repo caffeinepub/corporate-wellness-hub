@@ -6,6 +6,7 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
+  Globe,
   TrendingUp,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -16,32 +17,33 @@ const slides = [
     id: 1,
     icon: Brain,
     title: "What Is Stress?",
-    subtitle: "Understanding the silent threat",
+    subtitle: "Understanding the silent global threat",
     type: "explainer" as const,
-    body: 'Stress is the body\'s physiological response to any demand or challenge. It triggers a cascade of hormones — cortisol, adrenaline — preparing you for "fight or flight". In short bursts it can sharpen focus. But prolonged, unmanaged stress becomes silently toxic, eroding your health, relationships, and career.',
+    body: 'Stress is the body\'s physiological response to any demand or challenge. It triggers a cascade of hormones — cortisol, adrenaline — preparing you for "fight or flight". In short bursts it can sharpen focus. But prolonged, unmanaged stress becomes silently toxic, eroding your health, relationships, and career. The World Health Organization now classifies burnout as an occupational phenomenon.',
     pills: ["Acute Stress", "Chronic Stress", "Episodic Stress"],
   },
   {
     id: 2,
     icon: TrendingUp,
-    title: "The Corporate Stress Crisis",
-    subtitle: "It's bigger than you think",
+    title: "The Global Corporate Stress Crisis",
+    subtitle: "A worldwide epidemic — not just a US problem",
     type: "stats-row" as const,
     stats: [
       {
-        value: "83%",
-        label: "of US workers suffer work-related stress",
-        source: "Statista 2023",
+        value: "1B+",
+        label: "workers worldwide affected by work-related stress",
+        source: "WHO 2023",
       },
       {
-        value: "1M+",
-        label: "employees absent every workday due to stress",
-        source: "AIS",
+        value: "12B",
+        label: "working days lost per year to depression & anxiety globally",
+        source: "WHO",
       },
       {
         value: "76%",
-        label: "say stress affects their personal relationships",
-        source: "APA",
+        label:
+          "of workers globally report at least one symptom of poor mental health",
+        source: "McKinsey 2022",
       },
     ],
   },
@@ -94,24 +96,47 @@ const slides = [
     subtitle: "Global workplace stress by the data",
     type: "grid-stats" as const,
     gridStats: [
-      { value: "77%", label: "experience physical symptoms of stress at work" },
-      { value: "73%", label: "report psychological stress symptoms regularly" },
       {
-        value: "$300B",
-        label: "annual cost to US employers from stress & burnout",
+        value: "$1T",
+        label: "lost annually to global productivity from depression & anxiety",
       },
       {
-        value: "120K",
-        label: "deaths per year attributable to work-related stress",
+        value: "745K",
+        label: "deaths per year from overwork (long hours) — WHO/ILO",
+      },
+      {
+        value: "$322B",
+        label:
+          "global cost of employee burnout in turnover & lost productivity",
+      },
+      {
+        value: "44%",
+        label:
+          "of employees worldwide say their stress has increased in the past year",
       },
     ],
-    source: "Sources: APA, AIS, Harvard Business Review",
+    source: "Sources: WHO, ILO, McKinsey, Gallup 2023",
   },
   {
     id: 5,
+    icon: Globe,
+    title: "Stress by Region",
+    subtitle: "No continent is immune",
+    type: "bars" as const,
+    bars: [
+      { label: "South Asia (India, Bangladesh)", pct: 82 },
+      { label: "North America (US, Canada)", pct: 79 },
+      { label: "East Asia (Japan, China, S. Korea)", pct: 75 },
+      { label: "Europe (UK, Germany, France)", pct: 68 },
+      { label: "Middle East & Africa", pct: 65 },
+      { label: "Latin America", pct: 62 },
+    ],
+  },
+  {
+    id: 6,
     icon: Building2,
     title: "Industries Hit Hardest",
-    subtitle: "No sector is immune",
+    subtitle: "No sector is immune — globally",
     type: "bars" as const,
     bars: [
       { label: "Finance & Banking", pct: 79 },
@@ -122,7 +147,7 @@ const slides = [
     ],
   },
   {
-    id: 6,
+    id: 7,
     icon: AlertOctagon,
     title: "The Burnout Spiral",
     subtitle: "When stress goes unaddressed",
@@ -237,13 +262,13 @@ export function StressBanner() {
           transition={{ duration: 0.5 }}
         >
           <span className="inline-block text-xs font-semibold tracking-[0.2em] uppercase text-rose-400 mb-3">
-            ⚠ Awareness Series
+            🌍 Global Awareness Series
           </span>
           <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">
             The Stress Reality
           </h2>
           <p className="text-zinc-400 text-sm md:text-base max-w-xl mx-auto">
-            Why corporate wellness isn&apos;t optional anymore
+            Why corporate wellness isn&apos;t optional anymore — worldwide
           </p>
         </motion.div>
       </div>
@@ -499,9 +524,9 @@ function SlideContent({ slide }: { slide: (typeof slides)[number] }) {
         </div>
         <div className="bg-amber-500/10 border border-amber-500/25 rounded-xl p-4 mb-5">
           <p className="text-amber-300 text-sm">
-            💸 Replacing one employee costs{" "}
+            💸 Globally, replacing one employee costs{" "}
             <strong className="text-amber-200">150–200%</strong> of their annual
-            salary
+            salary — a universal cost across all markets
           </p>
         </div>
 
