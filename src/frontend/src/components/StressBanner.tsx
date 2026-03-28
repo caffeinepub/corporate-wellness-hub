@@ -1,12 +1,17 @@
 import {
   Activity,
   AlertOctagon,
+  ArrowDown,
+  ArrowRight,
   BarChart2,
   Brain,
   Building2,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Globe,
+  ShieldCheck,
+  Sparkles,
   TrendingUp,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -159,6 +164,60 @@ const slides = [
       "Disengagement",
       "Burnout",
       "High Turnover",
+    ],
+  },
+  {
+    id: 8,
+    icon: ShieldCheck,
+    title: "How We Resolve This",
+    subtitle: "Corporate Wellness Hub — your all-in-one solution",
+    type: "solutions" as const,
+    solutions: [
+      {
+        emoji: "😔",
+        problem: "Isolation & Disengagement",
+        problemStat: "1 in 3 employees feel lonely at work",
+        fix: "Mindfully Meetup & Social Gathering",
+        fixDetail: "Team bonding in low-pressure activities",
+        href: "/mindful-meetup",
+        cta: "Explore Meetups",
+      },
+      {
+        emoji: "🪑",
+        problem: "Physical Fatigue",
+        problemStat: "Sedentary work → chronic exhaustion",
+        fix: "Movement & Exercise (Sports)",
+        fixDetail: "Cricket, Badminton, Pickleball & more",
+        href: "/programs",
+        cta: "Browse Sports",
+      },
+      {
+        emoji: "🤐",
+        problem: "Bottled Emotions",
+        problemStat: "76% fear stigma when speaking up",
+        fix: "Anonymous Discussion Board",
+        fixDetail: "Voice stress freely, without judgment",
+        href: "/discuss",
+        cta: "Talk Anonymously",
+      },
+      {
+        emoji: "🧩",
+        problem: "Mental Health Gaps",
+        problemStat: "Only 1 in 10 gets needed support",
+        fix: "Licensed Psychologists",
+        fixDetail: "Private online sessions on your schedule",
+        href: "/psychologists",
+        cta: "Book a Session",
+      },
+      {
+        emoji: "🌀",
+        problem: "Task Overwhelm",
+        problemStat: "Unclear ownership → stress overload",
+        fix: "Task Allocation Module",
+        fixDetail: "Fair workload distribution across teams",
+        href: "/programs",
+        cta: "Try Task Tools",
+      },
     ],
   },
 ];
@@ -327,7 +386,9 @@ export function StressBanner() {
               onClick={() => goTo(i, i > current ? 1 : -1)}
               className={`h-1.5 rounded-full transition-all duration-300 ${
                 i === current
-                  ? "w-8 bg-rose-500"
+                  ? i === slides.length - 1
+                    ? "w-8 bg-emerald-500"
+                    : "w-8 bg-rose-500"
                   : "w-2 bg-white/20 hover:bg-white/40"
               }`}
             />
@@ -349,10 +410,22 @@ export function StressBanner() {
 function SlideContent({ slide }: { slide: (typeof slides)[number] }) {
   const Icon = slide.icon;
 
+  const isSolution = slide.type === "solutions";
+
   const header = (
     <div className="flex items-start gap-3 mb-6">
-      <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center">
-        <Icon className="w-5 h-5 text-rose-400" />
+      <div
+        className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
+          isSolution
+            ? "bg-emerald-500/20 border border-emerald-500/30"
+            : "bg-rose-500/20 border border-rose-500/30"
+        }`}
+      >
+        <Icon
+          className={`w-5 h-5 ${
+            isSolution ? "text-emerald-400" : "text-rose-400"
+          }`}
+        />
       </div>
       <div>
         <p className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-0.5">
@@ -537,6 +610,104 @@ function SlideContent({ slide }: { slide: (typeof slides)[number] }) {
         >
           Talk Anonymously →
         </a>
+      </div>
+    );
+  }
+
+  if (slide.type === "solutions") {
+    return (
+      <div>
+        {header}
+
+        {/* Column labels */}
+        <div className="hidden md:grid grid-cols-[1fr_48px_1fr] gap-2 mb-2 px-1">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />
+            <span className="text-xs font-bold uppercase tracking-widest text-rose-400">
+              The Problem
+            </span>
+          </div>
+          <div />
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+            <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">
+              Our Solution
+            </span>
+          </div>
+        </div>
+
+        {/* Transformation rows */}
+        <div className="space-y-2">
+          {slide.solutions.map((sol, i) => (
+            <motion.div
+              key={sol.problem}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: i * 0.07 }}
+              className="grid grid-cols-1 md:grid-cols-[1fr_48px_1fr] gap-2 items-center"
+            >
+              {/* Problem card */}
+              <div className="flex items-center gap-3 bg-rose-950/40 border border-rose-800/40 rounded-xl px-4 py-3 hover:border-rose-600/50 transition-colors group/prob">
+                <span className="text-xl flex-shrink-0">{sol.emoji}</span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-rose-300 leading-tight">
+                    {sol.problem}
+                  </p>
+                  <p className="text-xs text-rose-500/80 mt-0.5 truncate">
+                    {sol.problemStat}
+                  </p>
+                </div>
+              </div>
+
+              {/* Arrow — horizontal on md+, vertical on mobile */}
+              <div className="flex md:justify-center justify-start pl-4 md:pl-0">
+                <ArrowRight className="hidden md:block w-5 h-5 text-zinc-500" />
+                <ArrowDown className="block md:hidden w-5 h-5 text-zinc-600" />
+              </div>
+
+              {/* Solution card */}
+              <a
+                href={sol.href}
+                className="flex items-center gap-3 bg-emerald-950/40 border border-emerald-800/40 rounded-xl px-4 py-3 hover:border-emerald-500/60 hover:bg-emerald-950/60 transition-all group/sol"
+              >
+                <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-emerald-300 leading-tight">
+                    {sol.fix}
+                  </p>
+                  <p className="text-xs text-emerald-600/90 mt-0.5 truncate">
+                    {sol.fixDetail}
+                  </p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-emerald-600 group-hover/sol:text-emerald-400 group-hover/sol:translate-x-0.5 transition-all flex-shrink-0" />
+              </a>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* CTA bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.42 }}
+          className="mt-5 flex flex-col sm:flex-row items-start sm:items-center gap-3"
+        >
+          <a
+            href="/membership"
+            data-ocid="stress_banner.primary_button"
+            className="inline-flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-full text-white transition-all shadow-lg shadow-emerald-900/40 hover:shadow-emerald-700/50 hover:scale-105"
+            style={{
+              background:
+                "linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%)",
+            }}
+          >
+            <Sparkles className="w-4 h-4" />
+            Start Your Wellness Journey
+          </a>
+          <span className="text-zinc-500 text-xs">
+            One membership · Every tool your team needs
+          </span>
+        </motion.div>
       </div>
     );
   }
