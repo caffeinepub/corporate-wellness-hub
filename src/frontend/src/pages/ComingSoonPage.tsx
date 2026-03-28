@@ -173,6 +173,48 @@ const SPACES = [
     available: "Q3 2026",
     gradient: "from-fuchsia-900/80 to-purple-900/60",
   },
+  {
+    id: "moodclub",
+    title: "Mood Club Lounge",
+    subtitle: "Set the vibe, set the pace",
+    mood: "Vibrant & Expressive",
+    tag: "Club",
+    tagColor: "bg-violet-500/20 text-violet-300 border-violet-500/30",
+    description:
+      "Plush velvet seating, pulsing ambient lighting, and a DJ booth in the corner. Where every workday feels like a curated experience — energising, expressive, and unforgettable.",
+    image: "/assets/generated/cowork-mood-club.dim_800x500.jpg",
+    vibe: ["🎵 Ambient beats", "💜 Mood lighting", "🪩 Club energy"],
+    available: "Q4 2026",
+    gradient: "from-violet-900/80 to-purple-900/60",
+  },
+  {
+    id: "cafe",
+    title: "Café & Co Studio",
+    subtitle: "The best ideas happen over coffee",
+    mood: "Cozy & Inspired",
+    tag: "Café",
+    tagColor: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+    description:
+      "Exposed brick, Edison bulb warmth, the hiss of an espresso machine, and a chalkboard menu on the wall. A place where your best thoughts brew right alongside your coffee.",
+    image: "/assets/generated/cowork-cafe-vibe.dim_800x500.jpg",
+    vibe: ["☕ Fresh brews", "🧱 Exposed brick", "🎶 Lo-fi tunes"],
+    available: "Q3 2026",
+    gradient: "from-amber-900/80 to-yellow-900/60",
+  },
+  {
+    id: "artistic",
+    title: "The Artistic Studio",
+    subtitle: "Create without limits",
+    mood: "Creative & Uninhibited",
+    tag: "Art",
+    tagColor: "bg-red-500/20 text-red-300 border-red-500/30",
+    description:
+      "Skylights, colorful murals, paint-splashed floors, and easels beside workstations. A space where conventional thinking is left at the door and originality is the only rule.",
+    image: "/assets/generated/cowork-artistic-vibe.dim_800x500.jpg",
+    vibe: ["🎨 Mural walls", "🖼️ Living gallery", "✏️ Always creating"],
+    available: "Q1 2027",
+    gradient: "from-red-900/80 to-orange-900/60",
+  },
 ];
 
 export function ComingSoonPage() {
@@ -220,12 +262,12 @@ export function ComingSoonPage() {
             <div className="flex items-center justify-center gap-3 text-sm text-muted-foreground mb-10">
               <div className="flex items-center gap-1.5">
                 <Clock className="w-4 h-4 text-primary" />
-                Launching 2025–2026
+                Launching 2025–2027
               </div>
               <span className="text-border">·</span>
               <div className="flex items-center gap-1.5">
                 <MapPin className="w-4 h-4 text-primary" />
-                12 unique environments
+                15 unique environments
               </div>
             </div>
 
