@@ -21,10 +21,12 @@ import type { Principal } from "@icp-sdk/core/principal";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import {
   ArrowLeft,
+  Building2,
   CalendarDays,
   CheckSquare,
   Loader2,
   LogIn,
+  MapPin,
   Plus,
   Trash2,
   UserMinus,
@@ -299,6 +301,28 @@ export function SessionDetailPage() {
                   )}
                 </div>
               </div>
+              {session.spaceName && (
+                <div className="bg-muted/50 rounded-xl p-3">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                    <Building2 className="w-3.5 h-3.5" />
+                    Space
+                  </div>
+                  <div className="text-sm font-medium text-foreground">
+                    {session.spaceName}
+                  </div>
+                </div>
+              )}
+              {session.location && (
+                <div className="bg-muted/50 rounded-xl p-3">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                    <MapPin className="w-3.5 h-3.5" />
+                    Location
+                  </div>
+                  <div className="text-sm font-medium text-foreground">
+                    {session.location}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Join / Leave */}

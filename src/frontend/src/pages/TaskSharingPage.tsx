@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft, Calendar, LogIn, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
+import { CreateSessionModal } from "../components/CreateSessionModal";
+import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { ProgramType } from "../hooks/useQueries";
 
 const ALL_TASK_ACTIVITIES = [
   {
@@ -140,6 +143,8 @@ const DEFAULT_TAG_COLOR =
   "bg-[oklch(0.92_0.05_190)] text-[oklch(0.35_0.10_190)] border-[oklch(0.78_0.08_190)]";
 
 export function TaskSharingPage() {
+  const { identity, login, isLoggingIn } = useInternetIdentity();
+
   return (
     <main className="pt-24 pb-20">
       <div className="container max-w-6xl mx-auto px-4">
@@ -239,10 +244,43 @@ export function TaskSharingPage() {
                 ))}
               </div>
 
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium mb-3">
                 <span>👥</span>
                 <span>{activity.size}</span>
               </div>
+
+              {/* Book button */}
+              {!identity ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={login}
+                  disabled={isLoggingIn}
+                  className="w-full gap-2"
+                  data-ocid={`task_page.activity.open_modal_button.${i + 1}`}
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  Sign in to Book
+                </Button>
+              ) : (
+                <div>
+                  <CreateSessionModal
+                    defaultType={ProgramType.taskAllocation}
+                    defaultTitle={activity.name}
+                    trigger={
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full gap-2"
+                        data-ocid={`task_page.activity.open_modal_button.${i + 1}`}
+                      >
+                        <Calendar className="w-3.5 h-3.5" />
+                        Book Activity
+                      </Button>
+                    }
+                  />
+                </div>
+              )}
             </motion.div>
           ))}
         </div>

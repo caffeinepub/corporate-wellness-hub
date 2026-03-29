@@ -158,15 +158,20 @@ export function useCreateSession() {
       programType: ProgramType;
       dateTime: bigint;
       maxParticipants: bigint;
+      spaceName?: string;
+      location?: string;
     }) => {
       if (!actor) throw new Error("Not authenticated");
-      return actor.createSession(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (actor as any).createSession(
         args.title,
         args.description,
         args.programType,
         args.dateTime,
         args.maxParticipants,
-      );
+        args.spaceName ?? null,
+        args.location ?? null,
+      ) as Promise<bigint>;
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["sessions"] });

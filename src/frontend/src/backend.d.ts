@@ -26,6 +26,8 @@ export interface Session {
     maxParticipants: bigint;
     programType: ProgramType;
     dateTime: bigint;
+    spaceName?: string;
+    location?: string;
 }
 export type Time = bigint;
 export interface UserProfile {
@@ -61,7 +63,7 @@ export enum UserRole {
 }
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    createSession(title: string, description: string, programType: ProgramType, dateTime: bigint, maxParticipants: bigint): Promise<bigint>;
+    createSession(title: string, description: string, programType: ProgramType, dateTime: bigint, maxParticipants: bigint, spaceName: string | null, location: string | null): Promise<bigint>;
     createTask(sessionId: bigint, title: string, description: string, assignedTo: Principal | null): Promise<bigint>;
     deleteSession(sessionId: bigint): Promise<void>;
     getAllSessions(): Promise<Array<Session>>;

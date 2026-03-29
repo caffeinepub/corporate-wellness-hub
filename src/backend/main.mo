@@ -23,6 +23,20 @@ actor {
     #tennis;
   };
 
+  // Internal stored type — unchanged from v1 for backward compatibility
+  type StoredSession = {
+    id : Nat;
+    creator : Principal;
+    title : Text;
+    description : Text;
+    programType : ProgramType;
+    dateTime : Int;
+    maxParticipants : Nat;
+    participants : [Principal];
+    createdAt : Time.Time;
+  };
+
+  // Public-facing session type — includes optional new fields
   type Session = {
     id : Nat;
     creator : Principal;
@@ -33,6 +47,8 @@ actor {
     maxParticipants : Nat;
     participants : [Principal];
     createdAt : Time.Time;
+    spaceName : ?Text;
+    location : ?Text;
   };
 
   type Task = {
@@ -49,9 +65,9 @@ actor {
     name : Text;
   };
 
-  module Session {
-    public func compare(session1 : Session, session2 : Session) : Order.Order {
-      Nat.compare(session1.id, session2.id);
+  module StoredSession {
+    public func compare(a : StoredSession, b : StoredSession) : Order.Order {
+      Nat.compare(a.id, b.id);
     };
   };
 
@@ -64,11 +80,33 @@ actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
-  let sessions = Map.empty<Nat, Session>();
+  // sessions uses the OLD StoredSession type — backward compatible with existing stable data
+  let sessions = Map.empty<Nat, StoredSession>();
+  // New stable maps for the new optional fields — start empty, fully backward compatible
+  let sessionSpaceNames = Map.empty<Nat, Text>();
+  let sessionLocations = Map.empty<Nat, Text>();
+
   let tasks = Map.empty<Nat, Task>();
   let userProfiles = Map.empty<Principal, UserProfile>();
   var nextSessionId = 0;
   var nextTaskId = 0;
+
+  // Helper: compose a full Session from stored parts
+  func toSession(s : StoredSession) : Session {
+    {
+      id = s.id;
+      creator = s.creator;
+      title = s.title;
+      description = s.description;
+      programType = s.programType;
+      dateTime = s.dateTime;
+      maxParticipants = s.maxParticipants;
+      participants = s.participants;
+      createdAt = s.createdAt;
+      spaceName = sessionSpaceNames.get(s.id);
+      location = sessionLocations.get(s.id);
+    };
+  };
 
   // User Profile Functions
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
@@ -99,6 +137,8 @@ actor {
     programType : ProgramType,
     dateTime : Int,
     maxParticipants : Nat,
+    spaceName : ?Text,
+    location : ?Text,
   ) : async Nat {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can create sessions");
@@ -107,7 +147,7 @@ actor {
     let sessionId = nextSessionId;
     nextSessionId += 1;
 
-    let newSession : Session = {
+    let newSession : StoredSession = {
       id = sessionId;
       creator = caller;
       title;
@@ -120,6 +160,16 @@ actor {
     };
 
     sessions.add(sessionId, newSession);
+
+    switch (spaceName) {
+      case (?name) { sessionSpaceNames.add(sessionId, name) };
+      case (null) {};
+    };
+    switch (location) {
+      case (?loc) { sessionLocations.add(sessionId, loc) };
+      case (null) {};
+    };
+
     sessionId;
   };
 
@@ -181,6 +231,8 @@ actor {
           Runtime.trap("Unauthorized: Not session owner or admin");
         };
         sessions.remove(sessionId);
+        sessionSpaceNames.remove(sessionId);
+        sessionLocations.remove(sessionId);
       };
     };
   };
@@ -190,15 +242,15 @@ actor {
       Runtime.trap("Unauthorized: Only users can view sessions");
     };
 
-    let createdSessionsIter = sessions.values().filter(
-      func(session) { session.creator == caller }
-    );
+    let created = sessions.values().filter(
+      func(s) { s.creator == caller }
+    ).toArray().sort().map(toSession);
 
-    let joinedSessionsIter = sessions.values().filter(
-      func(session) { session.participants.values().any(func(p) { p == caller }) }
-    );
+    let joined = sessions.values().filter(
+      func(s) { s.participants.values().any(func(p) { p == caller }) }
+    ).toArray().sort().map(toSession);
 
-    (createdSessionsIter.toArray().sort(), joinedSessionsIter.toArray().sort());
+    (created, joined);
   };
 
   public query ({ caller }) func getSessionsByProgramType(programType : ProgramType) : async [Session] {
@@ -206,10 +258,9 @@ actor {
       Runtime.trap("Unauthorized: Only users can view sessions");
     };
 
-    let filteredIter = sessions.values().filter(
-      func(session) { session.programType == programType }
-    );
-    filteredIter.toArray().sort();
+    sessions.values().filter(
+      func(s) { s.programType == programType }
+    ).toArray().sort().map(toSession);
   };
 
   public query ({ caller }) func getSession(sessionId : Nat) : async Session {
@@ -219,7 +270,7 @@ actor {
 
     switch (sessions.get(sessionId)) {
       case (null) { Runtime.trap("Session does not exist") };
-      case (?session) { session };
+      case (?s) { toSession(s) };
     };
   };
 
@@ -228,7 +279,7 @@ actor {
       Runtime.trap("Unauthorized: Only users can view sessions");
     };
 
-    sessions.values().toArray().sort();
+    sessions.values().toArray().sort().map(toSession);
   };
 
   // Task Functions
@@ -299,10 +350,9 @@ actor {
       Runtime.trap("Unauthorized: Only users can view tasks");
     };
 
-    let filteredIter = tasks.values().filter(
-      func(task) { task.sessionId == sessionId }
-    );
-    filteredIter.toArray().sort();
+    tasks.values().filter(
+      func(t) { t.sessionId == sessionId }
+    ).toArray().sort();
   };
 
   public query ({ caller }) func getTask(taskId : Nat) : async Task {

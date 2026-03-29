@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Plus } from "lucide-react";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { toast } from "sonner";
 import { ProgramType } from "../hooks/useQueries";
 import { useCreateSession } from "../hooks/useQueries";
@@ -26,21 +26,27 @@ import { PROGRAM_CONFIGS, PROGRAM_ORDER } from "../lib/programConfig";
 
 interface CreateSessionModalProps {
   defaultType?: ProgramType;
+  defaultTitle?: string;
+  trigger?: ReactNode;
   onCreated?: (id: bigint) => void;
 }
 
 export function CreateSessionModal({
   defaultType,
+  defaultTitle,
+  trigger,
   onCreated,
 }: CreateSessionModalProps) {
   const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(defaultTitle ?? "");
   const [description, setDescription] = useState("");
   const [dateTime, setDateTime] = useState("");
   const [maxParticipants, setMaxParticipants] = useState("20");
   const [programType, setProgramType] = useState<ProgramType>(
     defaultType ?? ProgramType.meetup,
   );
+  const [spaceName, setSpaceName] = useState("");
+  const [location, setLocation] = useState("");
 
   const createMutation = useCreateSession();
 
@@ -64,6 +70,8 @@ export function CreateSessionModal({
         programType,
         dateTime: BigInt(dateMs * 1_000_000),
         maxParticipants: BigInt(Number.parseInt(maxParticipants) || 20),
+        spaceName: spaceName.trim() || undefined,
+        location: location.trim() || undefined,
       });
       toast.success("Session created!");
       setOpen(false);
@@ -75,20 +83,24 @@ export function CreateSessionModal({
   };
 
   const resetForm = () => {
-    setTitle("");
+    setTitle(defaultTitle ?? "");
     setDescription("");
     setDateTime("");
     setMaxParticipants("20");
     setProgramType(defaultType ?? ProgramType.meetup);
+    setSpaceName("");
+    setLocation("");
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button data-ocid="session.create_button">
-          <Plus className="w-4 h-4 mr-2" />
-          Create Session
-        </Button>
+        {trigger ?? (
+          <Button data-ocid="session.create_button">
+            <Plus className="w-4 h-4 mr-2" />
+            Create Session
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg" data-ocid="create_session.dialog">
         <DialogHeader>
@@ -172,6 +184,30 @@ export function CreateSessionModal({
                 })}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="cs-space">Space Name (optional)</Label>
+              <Input
+                id="cs-space"
+                value={spaceName}
+                onChange={(e) => setSpaceName(e.target.value)}
+                placeholder="e.g. Conference Room B"
+                data-ocid="create_session.space_input"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="cs-location">Location (optional)</Label>
+              <Input
+                id="cs-location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="e.g. Mumbai, India"
+                data-ocid="create_session.location_input"
+              />
+            </div>
           </div>
 
           <DialogFooter className="gap-2 pt-2">

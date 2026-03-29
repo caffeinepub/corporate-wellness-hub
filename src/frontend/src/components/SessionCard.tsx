@@ -6,6 +6,7 @@ import {
   ArrowRight,
   CalendarDays,
   Loader2,
+  MapPin,
   UserMinus,
   UserPlus,
   Users,
@@ -28,7 +29,7 @@ export function SessionCard({
   index = 0,
   showJoinLeave = true,
 }: SessionCardProps) {
-  const { identity } = useInternetIdentity();
+  const { identity, login } = useInternetIdentity();
   const cfg = getProgramConfig(session.programType);
   const joinMutation = useJoinSession();
   const leaveMutation = useLeaveSession();
@@ -96,9 +97,16 @@ export function SessionCard({
               <ArrowRight className="w-4 h-4 text-muted-foreground/50 flex-shrink-0 group-hover:text-primary group-hover:translate-x-0.5 transition-all mt-1" />
             </div>
 
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-4 leading-relaxed">
+            <p className="text-sm text-muted-foreground line-clamp-2 mb-2 leading-relaxed">
               {session.description}
             </p>
+
+            {session.location && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground mb-3">
+                <MapPin className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate">{session.location}</span>
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -113,49 +121,65 @@ export function SessionCard({
                 </span>
               </div>
 
-              {showJoinLeave && identity && !isCreator && (
+              {showJoinLeave && (
                 <div
                   onClick={(e) => e.stopPropagation()}
                   onKeyDown={(e) => e.stopPropagation()}
                   role="presentation"
                 >
-                  {isParticipant ? (
+                  {!identity ? (
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={handleLeave}
-                      disabled={leaveMutation.isPending}
-                      data-ocid="session.leave_button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        login();
+                      }}
+                      data-ocid="session.signin_button"
                       className="text-xs h-7 px-2.5"
                     >
-                      {leaveMutation.isPending ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                      ) : (
-                        <>
-                          <UserMinus className="w-3 h-3 mr-1" />
-                          Leave
-                        </>
-                      )}
+                      Sign in to Book
                     </Button>
                   ) : (
-                    <Button
-                      size="sm"
-                      onClick={handleJoin}
-                      disabled={joinMutation.isPending || isFull}
-                      data-ocid="session.join_button"
-                      className="text-xs h-7 px-2.5"
-                    >
-                      {joinMutation.isPending ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                      ) : isFull ? (
-                        "Full"
-                      ) : (
-                        <>
-                          <UserPlus className="w-3 h-3 mr-1" />
-                          Join
-                        </>
-                      )}
-                    </Button>
+                    !isCreator &&
+                    (isParticipant ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleLeave}
+                        disabled={leaveMutation.isPending}
+                        data-ocid="session.leave_button"
+                        className="text-xs h-7 px-2.5"
+                      >
+                        {leaveMutation.isPending ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <>
+                            <UserMinus className="w-3 h-3 mr-1" />
+                            Leave
+                          </>
+                        )}
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        onClick={handleJoin}
+                        disabled={joinMutation.isPending || isFull}
+                        data-ocid="session.join_button"
+                        className="text-xs h-7 px-2.5"
+                      >
+                        {joinMutation.isPending ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : isFull ? (
+                          "Full"
+                        ) : (
+                          <>
+                            <UserPlus className="w-3 h-3 mr-1" />
+                            Join
+                          </>
+                        )}
+                      </Button>
+                    ))
                   )}
                 </div>
               )}
