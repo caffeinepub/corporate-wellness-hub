@@ -6,10 +6,11 @@ import Time "mo:core/Time";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
 
+
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 
-
+// Automatic migration with persistent actor
 
 actor {
   type ProgramType = {
@@ -21,6 +22,48 @@ actor {
     #pickleball;
     #badminton;
     #tennis;
+  };
+
+  public type ProviderType = {
+    #psychologist;
+    #sportsCompany;
+  };
+
+  public type ProviderApplication = {
+    id : Nat;
+    providerType : ProviderType;
+    name : Text;
+    description : Text;
+    submittedAt : Time.Time;
+    isApproved : Bool;
+    isRejected : Bool;
+  };
+
+  public type ProviderBooking = {
+    id : Nat;
+    user : Principal;
+    providerId : Nat;
+    bookingTime : Time.Time;
+    createdAt : Time.Time;
+    isConfirmed : Bool;
+  };
+
+  public type ActivityLogType = {
+    #sessionCreated;
+    #sessionJoined;
+    #sessionLeft;
+    #taskCreated;
+    #taskCompleted;
+    #providerBooked;
+  };
+
+  public type ActivityLog = {
+    id : Nat;
+    user : Principal;
+    activityType : ActivityLogType;
+    activityTime : Time.Time;
+    createdAt : Time.Time;
+    relatedId : Nat;
   };
 
   // Internal stored type — unchanged from v1 for backward compatibility
@@ -91,6 +134,14 @@ actor {
   var nextSessionId = 0;
   var nextTaskId = 0;
 
+  // New persistent types for v2
+  let providerApplications = Map.empty<Nat, ProviderApplication>();
+  let providerBookings = Map.empty<Nat, ProviderBooking>();
+  let activityLogs = Map.empty<Nat, ActivityLog>();
+  var nextProviderId = 0;
+  var nextBookingId = 0;
+  var nextLogId = 0;
+
   // Helper: compose a full Session from stored parts
   func toSession(s : StoredSession) : Session {
     {
@@ -106,6 +157,21 @@ actor {
       spaceName = sessionSpaceNames.get(s.id);
       location = sessionLocations.get(s.id);
     };
+  };
+
+  // Log new activity
+  func logActivity(caller : Principal, activityType : ActivityLogType, relatedId : Nat) {
+    let logId = nextLogId;
+    nextLogId += 1;
+    let newLog : ActivityLog = {
+      id = logId;
+      user = caller;
+      activityType;
+      activityTime = Time.now();
+      createdAt = Time.now();
+      relatedId;
+    };
+    activityLogs.add(logId, newLog);
   };
 
   // User Profile Functions
@@ -144,6 +210,14 @@ actor {
       Runtime.trap("Unauthorized: Only users can create sessions");
     };
 
+    if (title.size() > 100) {
+      Runtime.trap("Title is too long, must be under 100 characters");
+    };
+
+    if (maxParticipants > 500) {
+      Runtime.trap("Maximum participants cannot exceed 500");
+    };
+
     let sessionId = nextSessionId;
     nextSessionId += 1;
 
@@ -170,6 +244,8 @@ actor {
       case (null) {};
     };
 
+    logActivity(caller, #sessionCreated, sessionId);
+
     sessionId;
   };
 
@@ -193,6 +269,8 @@ actor {
           session with
           participants = session.participants.concat([caller])
         });
+
+        logActivity(caller, #sessionJoined, sessionId);
       };
     };
   };
@@ -215,6 +293,8 @@ actor {
           session with
           participants = participantsArray;
         });
+
+        logActivity(caller, #sessionLeft, sessionId);
       };
     };
   };
@@ -233,6 +313,60 @@ actor {
         sessions.remove(sessionId);
         sessionSpaceNames.remove(sessionId);
         sessionLocations.remove(sessionId);
+      };
+    };
+  };
+
+  public shared ({ caller }) func updateSession(
+    sessionId : Nat,
+    title : ?Text,
+    description : ?Text,
+    dateTime : ?Int,
+    maxParticipants : ?Nat,
+    spaceName : ?Text,
+    location : ?Text,
+  ) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can update sessions");
+    };
+    switch (sessions.get(sessionId)) {
+      case (null) { Runtime.trap("Session does not exist") };
+      case (?existingSession) {
+        if (existingSession.creator != caller and not AccessControl.isAdmin(accessControlState, caller)) {
+          Runtime.trap("Unauthorized: Not session owner or admin");
+        };
+
+        switch (spaceName) {
+          case (?name) { sessionSpaceNames.add(sessionId, name) };
+          case (null) {};
+        };
+        switch (location) {
+          case (?loc) { sessionLocations.add(sessionId, loc) };
+          case (null) {};
+        };
+
+        sessions.add(
+          sessionId,
+          {
+            existingSession with
+            title = switch (title) {
+              case (null) { existingSession.title };
+              case (?t) { t };
+            };
+            description = switch (description) {
+              case (null) { existingSession.description };
+              case (?d) { d };
+            };
+            dateTime = switch (dateTime) {
+              case (null) { existingSession.dateTime };
+              case (?dt) { dt };
+            };
+            maxParticipants = switch (maxParticipants) {
+              case (null) { existingSession.maxParticipants };
+              case (?mp) { mp };
+            };
+          },
+        );
       };
     };
   };
@@ -315,6 +449,9 @@ actor {
         };
 
         tasks.add(taskId, newTask);
+
+        logActivity(caller, #taskCreated, taskId);
+
         taskId;
       };
     };
@@ -341,6 +478,8 @@ actor {
           task with
           completed = true;
         });
+
+        logActivity(caller, #taskCompleted, taskId);
       };
     };
   };
@@ -374,12 +513,32 @@ actor {
     tasks.values().toArray().sort();
   };
 
+  public query ({ caller }) func getTasksForUser(user : Principal) : async [Task] {
+    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Can only view your own tasks");
+    };
+
+    tasks.values().filter(
+      func(t) {
+        switch (t.assignedTo) {
+          case (?assignedTo) { assignedTo == user };
+          case (null) { false };
+        };
+      }
+    ).toArray().sort();
+  };
+
   public type AdminStats = {
     totalSessions : Nat;
     totalUsers : Nat;
     totalTasks : Nat;
     completedTasks : Nat;
     sessionsByType : [(Text, Nat)];
+    totalBookings : Nat;
+    totalProviders : Nat;
+    approvedProviders : Nat;
+    rejectedProviders : Nat;
+    pendingProviders : Nat;
   };
 
   public type UserProfileEntry = {
@@ -402,6 +561,11 @@ actor {
     let socialCount = allSessions.values().filter(func(s) { s.programType == #socialGathering }).toArray().size();
     let taskCount = allSessions.values().filter(func(s) { s.programType == #taskAllocation }).toArray().size();
 
+    let allProviders = providerApplications.values().toArray();
+    let approvedCount = allProviders.values().filter(func(p) { p.isApproved }).toArray().size();
+    let rejectedCount = allProviders.values().filter(func(p) { p.isRejected }).toArray().size();
+    let pendingCount = allProviders.values().filter(func(p) { not p.isApproved and not p.isRejected }).toArray().size();
+
     {
       totalSessions = allSessions.size();
       totalUsers = accessControlState.userRoles.size();
@@ -413,6 +577,11 @@ actor {
         ("Social Gathering", socialCount),
         ("Task Allocation", taskCount),
       ];
+      totalBookings = providerBookings.size();
+      totalProviders = allProviders.size();
+      approvedProviders = approvedCount;
+      rejectedProviders = rejectedCount;
+      pendingProviders = pendingCount;
     };
   };
 
@@ -434,4 +603,225 @@ actor {
       };
     }).toArray();
   };
+
+  // New Provider-related functions
+  public shared ({ caller }) func submitProviderApplication(
+    providerType : ProviderType,
+    name : Text,
+    description : Text,
+  ) : async Nat {
+    // No auth required - anyone including guests can submit provider applications
+    let providerId = nextProviderId;
+    nextProviderId += 1;
+    let newProvider : ProviderApplication = {
+      id = providerId;
+      providerType;
+      name;
+      description;
+      submittedAt = Time.now();
+      isApproved = false;
+      isRejected = false;
+    };
+    providerApplications.add(providerId, newProvider);
+    providerId;
+  };
+
+  public query ({ caller }) func getProvider(providerId : Nat) : async ProviderApplication {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view provider details");
+    };
+
+    switch (providerApplications.get(providerId)) {
+      case (null) { Runtime.trap("Provider does not exist") };
+      case (?p) { p };
+    };
+  };
+
+  public query ({ caller }) func getAllProviders() : async [ProviderApplication] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view providers");
+    };
+
+    // Non-admins can only see approved providers
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      return providerApplications.values().filter(
+        func(p) { p.isApproved }
+      ).toArray();
+    };
+
+    // Admins can see all providers
+    providerApplications.values().toArray();
+  };
+
+  public query ({ caller }) func getApprovedProviders() : async [ProviderApplication] {
+    // Public endpoint - no auth required, only shows approved providers
+    providerApplications.values().filter(
+      func(p) { p.isApproved }
+    ).toArray();
+  };
+
+  public query ({ caller }) func getPendingProviders() : async [ProviderApplication] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can view pending providers");
+    };
+    providerApplications.values().filter(
+      func(p) { not p.isApproved and not p.isRejected }
+    ).toArray();
+  };
+
+  public shared ({ caller }) func approveProvider(providerId : Nat) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can approve providers");
+    };
+
+    switch (providerApplications.get(providerId)) {
+      case (null) { Runtime.trap("Provider not found") };
+      case (?provider) {
+        if (provider.isApproved) {
+          Runtime.trap("Provider is already approved");
+        };
+        if (provider.isRejected) {
+          Runtime.trap("Provider is already rejected");
+        };
+        providerApplications.add(providerId, {
+          provider with
+          isApproved = true;
+        });
+      };
+    };
+  };
+
+  public shared ({ caller }) func rejectProvider(providerId : Nat) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can reject providers");
+    };
+
+    switch (providerApplications.get(providerId)) {
+      case (null) { Runtime.trap("Provider not found") };
+      case (?provider) {
+        if (provider.isRejected) {
+          Runtime.trap("Provider is already rejected");
+        };
+        if (provider.isApproved) {
+          Runtime.trap("Provider is already approved");
+        };
+        providerApplications.add(providerId, {
+          provider with
+          isRejected = true;
+        });
+      };
+    };
+  };
+
+  public shared ({ caller }) func bookProvider(
+    providerId : Nat,
+    bookingTime : Time.Time,
+  ) : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can book providers");
+    };
+
+    switch (providerApplications.get(providerId)) {
+      case (null) { Runtime.trap("Provider does not exist") };
+      case (?provider) {
+        if (not provider.isApproved) {
+          Runtime.trap("Cannot book a provider that is not approved");
+        };
+      };
+    };
+
+    let bookingId = nextBookingId;
+    nextBookingId += 1;
+    let newBooking : ProviderBooking = {
+      id = bookingId;
+      user = caller;
+      providerId;
+      bookingTime;
+      createdAt = Time.now();
+      isConfirmed = true;
+    };
+    providerBookings.add(bookingId, newBooking);
+
+    logActivity(caller, #providerBooked, bookingId);
+
+    bookingId;
+  };
+
+  public query ({ caller }) func getBooking(bookingId : Nat) : async ProviderBooking {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view bookings");
+    };
+
+    switch (providerBookings.get(bookingId)) {
+      case (null) { Runtime.trap("Booking does not exist") };
+      case (?b) {
+        // Users can only view their own bookings, admins can view all
+        if (b.user != caller and not AccessControl.isAdmin(accessControlState, caller)) {
+          Runtime.trap("Unauthorized: Can only view your own bookings");
+        };
+        b;
+      };
+    };
+  };
+
+  public shared ({ caller }) func cancelBooking(bookingId : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can cancel bookings");
+    };
+
+    switch (providerBookings.get(bookingId)) {
+      case (null) { Runtime.trap("Booking does not exist") };
+      case (?existingBooking) {
+        if (existingBooking.user != caller and not (AccessControl.isAdmin(accessControlState, caller))) {
+          Runtime.trap("Unauthorized: Cannot cancel someone else's booking unless you are admin");
+        };
+        providerBookings.remove(bookingId);
+      };
+    };
+  };
+
+  public query ({ caller }) func getBookingsForUser(user : Principal) : async [ProviderBooking] {
+    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Cannot view someone else's bookings unless you are admin");
+    };
+
+    providerBookings.values().filter(
+      func(b) { b.user == user }
+    ).toArray();
+  };
+
+  public query ({ caller }) func getBookingsForProvider(providerId : Nat) : async [ProviderBooking] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view provider bookings");
+    };
+
+    providerBookings.values().filter(
+      func(b) { b.providerId == providerId }
+    ).toArray();
+  };
+
+  public query ({ caller }) func getAllBookings() : async [ProviderBooking] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can view all bookings");
+    };
+    providerBookings.values().toArray();
+  };
+
+  public query ({ caller }) func getAllActivityLogs() : async [ActivityLog] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can view all activity logs");
+    };
+    activityLogs.values().toArray();
+  };
+
+  public query ({ caller }) func getActivityLogsForUser(user : Principal) : async [ActivityLog] {
+    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Cannot view someone else's logs unless you are admin");
+    };
+
+    activityLogs.values().filter(
+      func(log) { log.user == user }
+    ).toArray();
+  };
 };
+

@@ -10,6 +10,32 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface ActivityLog {
+  'id' : bigint,
+  'activityTime' : Time,
+  'activityType' : ActivityLogType,
+  'createdAt' : Time,
+  'user' : Principal,
+  'relatedId' : bigint,
+}
+export type ActivityLogType = { 'providerBooked' : null } |
+  { 'sessionCreated' : null } |
+  { 'sessionLeft' : null } |
+  { 'sessionJoined' : null } |
+  { 'taskCompleted' : null } |
+  { 'taskCreated' : null };
+export interface AdminStats {
+  'totalTasks' : bigint,
+  'completedTasks' : bigint,
+  'sessionsByType' : Array<[string, bigint]>,
+  'totalBookings' : bigint,
+  'rejectedProviders' : bigint,
+  'approvedProviders' : bigint,
+  'totalProviders' : bigint,
+  'totalUsers' : bigint,
+  'totalSessions' : bigint,
+  'pendingProviders' : bigint,
+}
 export type ProgramType = { 'boxCricket' : null } |
   { 'socialGathering' : null } |
   { 'exercise' : null } |
@@ -18,6 +44,25 @@ export type ProgramType = { 'boxCricket' : null } |
   { 'tennis' : null } |
   { 'badminton' : null } |
   { 'meetup' : null };
+export interface ProviderApplication {
+  'id' : bigint,
+  'isApproved' : boolean,
+  'isRejected' : boolean,
+  'name' : string,
+  'submittedAt' : Time,
+  'description' : string,
+  'providerType' : ProviderType,
+}
+export interface ProviderBooking {
+  'id' : bigint,
+  'createdAt' : Time,
+  'user' : Principal,
+  'bookingTime' : Time,
+  'isConfirmed' : boolean,
+  'providerId' : bigint,
+}
+export type ProviderType = { 'sportsCompany' : null } |
+  { 'psychologist' : null };
 export interface Session {
   'id' : bigint,
   'title' : string,
@@ -25,9 +70,11 @@ export interface Session {
   'participants' : Array<Principal>,
   'createdAt' : Time,
   'description' : string,
+  'spaceName' : [] | [string],
   'maxParticipants' : bigint,
   'programType' : ProgramType,
   'dateTime' : bigint,
+  'location' : [] | [string],
 }
 export interface Task {
   'id' : bigint,
@@ -40,14 +87,23 @@ export interface Task {
 }
 export type Time = bigint;
 export interface UserProfile { 'name' : string }
+export interface UserProfileEntry {
+  'sessionsCreated' : bigint,
+  'principal' : Principal,
+  'name' : string,
+  'sessionsJoined' : bigint,
+}
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'approveProvider' : ActorMethod<[bigint], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'bookProvider' : ActorMethod<[bigint, Time], bigint>,
+  'cancelBooking' : ActorMethod<[bigint], undefined>,
   'createSession' : ActorMethod<
-    [string, string, ProgramType, bigint, bigint],
+    [string, string, ProgramType, bigint, bigint, [] | [string], [] | [string]],
     bigint
   >,
   'createTask' : ActorMethod<
@@ -55,21 +111,51 @@ export interface _SERVICE {
     bigint
   >,
   'deleteSession' : ActorMethod<[bigint], undefined>,
+  'getActivityLogsForUser' : ActorMethod<[Principal], Array<ActivityLog>>,
+  'getAdminStats' : ActorMethod<[], AdminStats>,
+  'getAllActivityLogs' : ActorMethod<[], Array<ActivityLog>>,
+  'getAllBookings' : ActorMethod<[], Array<ProviderBooking>>,
+  'getAllProviders' : ActorMethod<[], Array<ProviderApplication>>,
   'getAllSessions' : ActorMethod<[], Array<Session>>,
   'getAllTasks' : ActorMethod<[], Array<Task>>,
+  'getAllUserProfiles' : ActorMethod<[], Array<UserProfileEntry>>,
+  'getApprovedProviders' : ActorMethod<[], Array<ProviderApplication>>,
+  'getBooking' : ActorMethod<[bigint], ProviderBooking>,
+  'getBookingsForProvider' : ActorMethod<[bigint], Array<ProviderBooking>>,
+  'getBookingsForUser' : ActorMethod<[Principal], Array<ProviderBooking>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getMySessions' : ActorMethod<[], [Array<Session>, Array<Session>]>,
+  'getPendingProviders' : ActorMethod<[], Array<ProviderApplication>>,
+  'getProvider' : ActorMethod<[bigint], ProviderApplication>,
   'getSession' : ActorMethod<[bigint], Session>,
   'getSessionsByProgramType' : ActorMethod<[ProgramType], Array<Session>>,
   'getTask' : ActorMethod<[bigint], Task>,
   'getTasksBySession' : ActorMethod<[bigint], Array<Task>>,
+  'getTasksForUser' : ActorMethod<[Principal], Array<Task>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'joinSession' : ActorMethod<[bigint], undefined>,
   'leaveSession' : ActorMethod<[bigint], undefined>,
   'markTaskComplete' : ActorMethod<[bigint], undefined>,
+  'rejectProvider' : ActorMethod<[bigint], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'submitProviderApplication' : ActorMethod<
+    [ProviderType, string, string],
+    bigint
+  >,
+  'updateSession' : ActorMethod<
+    [
+      bigint,
+      [] | [string],
+      [] | [string],
+      [] | [bigint],
+      [] | [bigint],
+      [] | [string],
+      [] | [string],
+    ],
+    undefined
+  >,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

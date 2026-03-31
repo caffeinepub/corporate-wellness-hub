@@ -13,6 +13,7 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const Time = IDL.Int;
 export const ProgramType = IDL.Variant({
   'boxCricket' : IDL.Null,
   'socialGathering' : IDL.Null,
@@ -23,7 +24,55 @@ export const ProgramType = IDL.Variant({
   'badminton' : IDL.Null,
   'meetup' : IDL.Null,
 });
-export const Time = IDL.Int;
+export const ActivityLogType = IDL.Variant({
+  'providerBooked' : IDL.Null,
+  'sessionCreated' : IDL.Null,
+  'sessionLeft' : IDL.Null,
+  'sessionJoined' : IDL.Null,
+  'taskCompleted' : IDL.Null,
+  'taskCreated' : IDL.Null,
+});
+export const ActivityLog = IDL.Record({
+  'id' : IDL.Nat,
+  'activityTime' : Time,
+  'activityType' : ActivityLogType,
+  'createdAt' : Time,
+  'user' : IDL.Principal,
+  'relatedId' : IDL.Nat,
+});
+export const AdminStats = IDL.Record({
+  'totalTasks' : IDL.Nat,
+  'completedTasks' : IDL.Nat,
+  'sessionsByType' : IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat)),
+  'totalBookings' : IDL.Nat,
+  'rejectedProviders' : IDL.Nat,
+  'approvedProviders' : IDL.Nat,
+  'totalProviders' : IDL.Nat,
+  'totalUsers' : IDL.Nat,
+  'totalSessions' : IDL.Nat,
+  'pendingProviders' : IDL.Nat,
+});
+export const ProviderBooking = IDL.Record({
+  'id' : IDL.Nat,
+  'createdAt' : Time,
+  'user' : IDL.Principal,
+  'bookingTime' : Time,
+  'isConfirmed' : IDL.Bool,
+  'providerId' : IDL.Nat,
+});
+export const ProviderType = IDL.Variant({
+  'sportsCompany' : IDL.Null,
+  'psychologist' : IDL.Null,
+});
+export const ProviderApplication = IDL.Record({
+  'id' : IDL.Nat,
+  'isApproved' : IDL.Bool,
+  'isRejected' : IDL.Bool,
+  'name' : IDL.Text,
+  'submittedAt' : Time,
+  'description' : IDL.Text,
+  'providerType' : ProviderType,
+});
 export const Session = IDL.Record({
   'id' : IDL.Nat,
   'title' : IDL.Text,
@@ -31,9 +80,11 @@ export const Session = IDL.Record({
   'participants' : IDL.Vec(IDL.Principal),
   'createdAt' : Time,
   'description' : IDL.Text,
+  'spaceName' : IDL.Opt(IDL.Text),
   'maxParticipants' : IDL.Nat,
   'programType' : ProgramType,
   'dateTime' : IDL.Int,
+  'location' : IDL.Opt(IDL.Text),
 });
 export const Task = IDL.Record({
   'id' : IDL.Nat,
@@ -44,13 +95,30 @@ export const Task = IDL.Record({
   'description' : IDL.Text,
   'sessionId' : IDL.Nat,
 });
+export const UserProfileEntry = IDL.Record({
+  'sessionsCreated' : IDL.Nat,
+  'principal' : IDL.Principal,
+  'name' : IDL.Text,
+  'sessionsJoined' : IDL.Nat,
+});
 export const UserProfile = IDL.Record({ 'name' : IDL.Text });
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'approveProvider' : IDL.Func([IDL.Nat], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'bookProvider' : IDL.Func([IDL.Nat, Time], [IDL.Nat], []),
+  'cancelBooking' : IDL.Func([IDL.Nat], [], []),
   'createSession' : IDL.Func(
-      [IDL.Text, IDL.Text, ProgramType, IDL.Int, IDL.Nat],
+      [
+        IDL.Text,
+        IDL.Text,
+        ProgramType,
+        IDL.Int,
+        IDL.Nat,
+        IDL.Opt(IDL.Text),
+        IDL.Opt(IDL.Text),
+      ],
       [IDL.Nat],
       [],
     ),
@@ -60,8 +128,34 @@ export const idlService = IDL.Service({
       [],
     ),
   'deleteSession' : IDL.Func([IDL.Nat], [], []),
+  'getActivityLogsForUser' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Vec(ActivityLog)],
+      ['query'],
+    ),
+  'getAdminStats' : IDL.Func([], [AdminStats], ['query']),
+  'getAllActivityLogs' : IDL.Func([], [IDL.Vec(ActivityLog)], ['query']),
+  'getAllBookings' : IDL.Func([], [IDL.Vec(ProviderBooking)], ['query']),
+  'getAllProviders' : IDL.Func([], [IDL.Vec(ProviderApplication)], ['query']),
   'getAllSessions' : IDL.Func([], [IDL.Vec(Session)], ['query']),
   'getAllTasks' : IDL.Func([], [IDL.Vec(Task)], ['query']),
+  'getAllUserProfiles' : IDL.Func([], [IDL.Vec(UserProfileEntry)], ['query']),
+  'getApprovedProviders' : IDL.Func(
+      [],
+      [IDL.Vec(ProviderApplication)],
+      ['query'],
+    ),
+  'getBooking' : IDL.Func([IDL.Nat], [ProviderBooking], ['query']),
+  'getBookingsForProvider' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Vec(ProviderBooking)],
+      ['query'],
+    ),
+  'getBookingsForUser' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Vec(ProviderBooking)],
+      ['query'],
+    ),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getMySessions' : IDL.Func(
@@ -69,6 +163,12 @@ export const idlService = IDL.Service({
       [IDL.Vec(Session), IDL.Vec(Session)],
       ['query'],
     ),
+  'getPendingProviders' : IDL.Func(
+      [],
+      [IDL.Vec(ProviderApplication)],
+      ['query'],
+    ),
+  'getProvider' : IDL.Func([IDL.Nat], [ProviderApplication], ['query']),
   'getSession' : IDL.Func([IDL.Nat], [Session], ['query']),
   'getSessionsByProgramType' : IDL.Func(
       [ProgramType],
@@ -77,6 +177,7 @@ export const idlService = IDL.Service({
     ),
   'getTask' : IDL.Func([IDL.Nat], [Task], ['query']),
   'getTasksBySession' : IDL.Func([IDL.Nat], [IDL.Vec(Task)], ['query']),
+  'getTasksForUser' : IDL.Func([IDL.Principal], [IDL.Vec(Task)], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -86,7 +187,26 @@ export const idlService = IDL.Service({
   'joinSession' : IDL.Func([IDL.Nat], [], []),
   'leaveSession' : IDL.Func([IDL.Nat], [], []),
   'markTaskComplete' : IDL.Func([IDL.Nat], [], []),
+  'rejectProvider' : IDL.Func([IDL.Nat], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'submitProviderApplication' : IDL.Func(
+      [ProviderType, IDL.Text, IDL.Text],
+      [IDL.Nat],
+      [],
+    ),
+  'updateSession' : IDL.Func(
+      [
+        IDL.Nat,
+        IDL.Opt(IDL.Text),
+        IDL.Opt(IDL.Text),
+        IDL.Opt(IDL.Int),
+        IDL.Opt(IDL.Nat),
+        IDL.Opt(IDL.Text),
+        IDL.Opt(IDL.Text),
+      ],
+      [],
+      [],
+    ),
 });
 
 export const idlInitArgs = [];
@@ -97,6 +217,7 @@ export const idlFactory = ({ IDL }) => {
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
+  const Time = IDL.Int;
   const ProgramType = IDL.Variant({
     'boxCricket' : IDL.Null,
     'socialGathering' : IDL.Null,
@@ -107,7 +228,55 @@ export const idlFactory = ({ IDL }) => {
     'badminton' : IDL.Null,
     'meetup' : IDL.Null,
   });
-  const Time = IDL.Int;
+  const ActivityLogType = IDL.Variant({
+    'providerBooked' : IDL.Null,
+    'sessionCreated' : IDL.Null,
+    'sessionLeft' : IDL.Null,
+    'sessionJoined' : IDL.Null,
+    'taskCompleted' : IDL.Null,
+    'taskCreated' : IDL.Null,
+  });
+  const ActivityLog = IDL.Record({
+    'id' : IDL.Nat,
+    'activityTime' : Time,
+    'activityType' : ActivityLogType,
+    'createdAt' : Time,
+    'user' : IDL.Principal,
+    'relatedId' : IDL.Nat,
+  });
+  const AdminStats = IDL.Record({
+    'totalTasks' : IDL.Nat,
+    'completedTasks' : IDL.Nat,
+    'sessionsByType' : IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat)),
+    'totalBookings' : IDL.Nat,
+    'rejectedProviders' : IDL.Nat,
+    'approvedProviders' : IDL.Nat,
+    'totalProviders' : IDL.Nat,
+    'totalUsers' : IDL.Nat,
+    'totalSessions' : IDL.Nat,
+    'pendingProviders' : IDL.Nat,
+  });
+  const ProviderBooking = IDL.Record({
+    'id' : IDL.Nat,
+    'createdAt' : Time,
+    'user' : IDL.Principal,
+    'bookingTime' : Time,
+    'isConfirmed' : IDL.Bool,
+    'providerId' : IDL.Nat,
+  });
+  const ProviderType = IDL.Variant({
+    'sportsCompany' : IDL.Null,
+    'psychologist' : IDL.Null,
+  });
+  const ProviderApplication = IDL.Record({
+    'id' : IDL.Nat,
+    'isApproved' : IDL.Bool,
+    'isRejected' : IDL.Bool,
+    'name' : IDL.Text,
+    'submittedAt' : Time,
+    'description' : IDL.Text,
+    'providerType' : ProviderType,
+  });
   const Session = IDL.Record({
     'id' : IDL.Nat,
     'title' : IDL.Text,
@@ -115,9 +284,11 @@ export const idlFactory = ({ IDL }) => {
     'participants' : IDL.Vec(IDL.Principal),
     'createdAt' : Time,
     'description' : IDL.Text,
+    'spaceName' : IDL.Opt(IDL.Text),
     'maxParticipants' : IDL.Nat,
     'programType' : ProgramType,
     'dateTime' : IDL.Int,
+    'location' : IDL.Opt(IDL.Text),
   });
   const Task = IDL.Record({
     'id' : IDL.Nat,
@@ -128,13 +299,30 @@ export const idlFactory = ({ IDL }) => {
     'description' : IDL.Text,
     'sessionId' : IDL.Nat,
   });
+  const UserProfileEntry = IDL.Record({
+    'sessionsCreated' : IDL.Nat,
+    'principal' : IDL.Principal,
+    'name' : IDL.Text,
+    'sessionsJoined' : IDL.Nat,
+  });
   const UserProfile = IDL.Record({ 'name' : IDL.Text });
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'approveProvider' : IDL.Func([IDL.Nat], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'bookProvider' : IDL.Func([IDL.Nat, Time], [IDL.Nat], []),
+    'cancelBooking' : IDL.Func([IDL.Nat], [], []),
     'createSession' : IDL.Func(
-        [IDL.Text, IDL.Text, ProgramType, IDL.Int, IDL.Nat],
+        [
+          IDL.Text,
+          IDL.Text,
+          ProgramType,
+          IDL.Int,
+          IDL.Nat,
+          IDL.Opt(IDL.Text),
+          IDL.Opt(IDL.Text),
+        ],
         [IDL.Nat],
         [],
       ),
@@ -144,8 +332,34 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'deleteSession' : IDL.Func([IDL.Nat], [], []),
+    'getActivityLogsForUser' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Vec(ActivityLog)],
+        ['query'],
+      ),
+    'getAdminStats' : IDL.Func([], [AdminStats], ['query']),
+    'getAllActivityLogs' : IDL.Func([], [IDL.Vec(ActivityLog)], ['query']),
+    'getAllBookings' : IDL.Func([], [IDL.Vec(ProviderBooking)], ['query']),
+    'getAllProviders' : IDL.Func([], [IDL.Vec(ProviderApplication)], ['query']),
     'getAllSessions' : IDL.Func([], [IDL.Vec(Session)], ['query']),
     'getAllTasks' : IDL.Func([], [IDL.Vec(Task)], ['query']),
+    'getAllUserProfiles' : IDL.Func([], [IDL.Vec(UserProfileEntry)], ['query']),
+    'getApprovedProviders' : IDL.Func(
+        [],
+        [IDL.Vec(ProviderApplication)],
+        ['query'],
+      ),
+    'getBooking' : IDL.Func([IDL.Nat], [ProviderBooking], ['query']),
+    'getBookingsForProvider' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Vec(ProviderBooking)],
+        ['query'],
+      ),
+    'getBookingsForUser' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Vec(ProviderBooking)],
+        ['query'],
+      ),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getMySessions' : IDL.Func(
@@ -153,6 +367,12 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(Session), IDL.Vec(Session)],
         ['query'],
       ),
+    'getPendingProviders' : IDL.Func(
+        [],
+        [IDL.Vec(ProviderApplication)],
+        ['query'],
+      ),
+    'getProvider' : IDL.Func([IDL.Nat], [ProviderApplication], ['query']),
     'getSession' : IDL.Func([IDL.Nat], [Session], ['query']),
     'getSessionsByProgramType' : IDL.Func(
         [ProgramType],
@@ -161,6 +381,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getTask' : IDL.Func([IDL.Nat], [Task], ['query']),
     'getTasksBySession' : IDL.Func([IDL.Nat], [IDL.Vec(Task)], ['query']),
+    'getTasksForUser' : IDL.Func([IDL.Principal], [IDL.Vec(Task)], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -170,7 +391,26 @@ export const idlFactory = ({ IDL }) => {
     'joinSession' : IDL.Func([IDL.Nat], [], []),
     'leaveSession' : IDL.Func([IDL.Nat], [], []),
     'markTaskComplete' : IDL.Func([IDL.Nat], [], []),
+    'rejectProvider' : IDL.Func([IDL.Nat], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'submitProviderApplication' : IDL.Func(
+        [ProviderType, IDL.Text, IDL.Text],
+        [IDL.Nat],
+        [],
+      ),
+    'updateSession' : IDL.Func(
+        [
+          IDL.Nat,
+          IDL.Opt(IDL.Text),
+          IDL.Opt(IDL.Text),
+          IDL.Opt(IDL.Int),
+          IDL.Opt(IDL.Nat),
+          IDL.Opt(IDL.Text),
+          IDL.Opt(IDL.Text),
+        ],
+        [],
+        [],
+      ),
   });
 };
 

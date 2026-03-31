@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Link, useLocation } from "@tanstack/react-router";
 import {
+  BookOpen,
   ChevronDown,
   Gauge,
   Leaf,
@@ -93,8 +94,7 @@ export function Navbar() {
                         : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     }`}
                   >
-                    Programs
-                    <ChevronDown className="w-3.5 h-3.5" />
+                    Programs <ChevronDown className="w-3.5 h-3.5" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-56">
@@ -117,6 +117,19 @@ export function Navbar() {
               </DropdownMenu>
 
               <Link
+                to="/book-activities"
+                data-ocid="nav.link"
+                className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive("/book-activities")
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                Book Activities
+              </Link>
+
+              <Link
                 to="/about"
                 data-ocid="nav.about_link"
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -127,7 +140,6 @@ export function Navbar() {
               >
                 About
               </Link>
-
               <Link
                 to="/contact"
                 data-ocid="nav.contact_link"
@@ -139,19 +151,6 @@ export function Navbar() {
               >
                 Contact
               </Link>
-
-              <Link
-                to="/careers"
-                data-ocid="nav.careers_link"
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive("/careers")
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                Careers
-              </Link>
-
               <Link
                 to="/membership"
                 data-ocid="nav.membership_link"
@@ -163,7 +162,6 @@ export function Navbar() {
               >
                 Membership
               </Link>
-
               <Link
                 to="/psychologists"
                 data-ocid="nav.psychologists_link"
@@ -175,7 +173,6 @@ export function Navbar() {
               >
                 Psychologists
               </Link>
-
               <Link
                 to="/groups"
                 data-ocid="nav.groups_link"
@@ -188,7 +185,6 @@ export function Navbar() {
                 <Users className="w-3.5 h-3.5" />
                 Groups
               </Link>
-
               <Link
                 to="/coming-soon"
                 data-ocid="nav.coming_soon_link"
@@ -361,6 +357,15 @@ export function Navbar() {
                     </Link>
                   );
                 })}
+                <Link
+                  to="/book-activities"
+                  data-ocid="nav.link"
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <BookOpen className="w-4 h-4" />
+                  Book Activities
+                </Link>
                 <div className="px-3 py-1 text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider">
                   Company
                 </div>

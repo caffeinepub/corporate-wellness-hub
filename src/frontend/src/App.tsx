@@ -10,6 +10,8 @@ import {
 import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
 import { AboutPage } from "./pages/AboutPage";
+import { ApplyProviderPage } from "./pages/ApplyProviderPage";
+import { BookActivitiesPage } from "./pages/BookActivitiesPage";
 import { CareersPage } from "./pages/CareersPage";
 import { ComingSoonPage } from "./pages/ComingSoonPage";
 import { ContactPage } from "./pages/ContactPage";
@@ -28,7 +30,7 @@ import { SignInPage } from "./pages/SignInPage";
 import { SocialGatheringPage } from "./pages/SocialGatheringPage";
 import { TaskSharingPage } from "./pages/TaskSharingPage";
 
-// ─── Root Layout ─────────────────────────────────────────────────
+// ─── Root Layout ───────────────────────────────────────────────────
 const rootRoute = createRootRoute({
   component: () => (
     <div className="min-h-screen flex flex-col bg-background">
@@ -48,107 +50,100 @@ const indexRoute = createRoute({
   path: "/",
   component: LandingPage,
 });
-
 const programsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/programs/$type",
   component: ProgramsPage,
 });
-
 const sessionDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/sessions/$id",
   component: SessionDetailPage,
 });
-
 const mySessionsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/my-sessions",
   component: MySessionsPage,
 });
-
 const meetupActivitiesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/meetup-activities",
   component: MindfulMeetupPage,
 });
-
 const socialActivitiesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/social-activities",
   component: SocialGatheringPage,
 });
-
 const taskActivitiesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/task-activities",
   component: TaskSharingPage,
 });
-
 const aboutRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/about",
   component: AboutPage,
 });
-
 const contactRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/contact",
   component: ContactPage,
 });
-
 const careersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/careers",
   component: CareersPage,
 });
-
 const membershipRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/membership",
   component: MembershipPage,
 });
-
 const psychologistsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/psychologists",
   component: PsychologistsPage,
 });
-
 const comingSoonRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/coming-soon",
   component: ComingSoonPage,
 });
-
 const signInRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/signin",
   component: SignInPage,
 });
-
 const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/dashboard",
   component: DashboardPage,
 });
-
 const groupsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/groups",
   component: GroupsPage,
 });
-
 const groupDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/groups/$topic",
   component: GroupDetailPage,
 });
-
 const discussRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/discuss",
   component: DiscussPage,
+});
+const applyProviderRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/apply-provider",
+  component: ApplyProviderPage,
+});
+const bookActivitiesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/book-activities",
+  component: BookActivitiesPage,
 });
 
 // Redirect /programs -> /programs/meetup
@@ -182,6 +177,8 @@ const routeTree = rootRoute.addChildren([
   groupsRoute,
   groupDetailRoute,
   discussRoute,
+  applyProviderRoute,
+  bookActivitiesRoute,
 ]);
 
 const router = createRouter({ routeTree });

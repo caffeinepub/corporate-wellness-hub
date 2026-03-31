@@ -1,8 +1,13 @@
 import type { Principal } from "@icp-sdk/core/principal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  type ActivityLog,
+  ActivityLogType,
   type AdminStats,
   ProgramType,
+  type ProviderApplication,
+  type ProviderBooking,
+  ProviderType,
   type Session,
   type Task,
   type UserProfile,
@@ -10,8 +15,14 @@ import {
 } from "../backend.d";
 import { useActor } from "./useActor";
 
-export { ProgramType };
-export type { AdminStats, UserProfileEntry };
+export { ActivityLogType, ProgramType, ProviderType };
+export type {
+  ActivityLog,
+  AdminStats,
+  ProviderApplication,
+  ProviderBooking,
+  UserProfileEntry,
+};
 
 // ─── Session Queries ──────────────────────────────────────────────
 
@@ -143,6 +154,88 @@ export function useTasksBySession(sessionId: bigint | null) {
       return actor.getTasksBySession(sessionId);
     },
     enabled: !!actor && !isFetching && sessionId !== null,
+  });
+}
+
+// ─── Provider Queries ───────────────────────────────────────────
+
+export function usePendingProviders() {
+  const { actor, isFetching } = useActor();
+  return useQuery<ProviderApplication[]>({
+    queryKey: ["providers", "pending"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getPendingProviders();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useAllProviders() {
+  const { actor, isFetching } = useActor();
+  return useQuery<ProviderApplication[]>({
+    queryKey: ["providers", "all"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllProviders();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useApproveProvider() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (providerId: bigint) => {
+      if (!actor) throw new Error("Not authenticated");
+      return actor.approveProvider(providerId);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["providers"] });
+      void qc.invalidateQueries({ queryKey: ["admin-stats"] });
+    },
+  });
+}
+
+export function useRejectProvider() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (providerId: bigint) => {
+      if (!actor) throw new Error("Not authenticated");
+      return actor.rejectProvider(providerId);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["providers"] });
+      void qc.invalidateQueries({ queryKey: ["admin-stats"] });
+    },
+  });
+}
+
+// ─── Activity Log Queries ────────────────────────────────────────
+
+export function useAllActivityLogs() {
+  const { actor, isFetching } = useActor();
+  return useQuery<ActivityLog[]>({
+    queryKey: ["activity-logs", "all"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllActivityLogs();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useActivityLogsForUser(user: Principal | null) {
+  const { actor, isFetching } = useActor();
+  return useQuery<ActivityLog[]>({
+    queryKey: ["activity-logs", "user", user?.toString()],
+    queryFn: async () => {
+      if (!actor || !user) return [];
+      return actor.getActivityLogsForUser(user);
+    },
+    enabled: !!actor && !isFetching && !!user,
   });
 }
 

@@ -19,10 +19,34 @@ const itemVariants: Variants = {
 };
 
 const stats = [
-  { icon: Users, value: "2,400+", label: "Community members" },
-  { icon: Sparkles, value: "180+", label: "Weekly sessions" },
-  { icon: Heart, value: "94%", label: "Satisfaction rate" },
-  { icon: Shield, value: "100%", label: "Safe & confidential" },
+  {
+    icon: Users,
+    value: "2,400+",
+    label: "Community members",
+    image: "/assets/generated/stat-community.dim_400x300.jpg",
+    slogan: "You belong here",
+  },
+  {
+    icon: Sparkles,
+    value: "180+",
+    label: "Weekly sessions",
+    image: "/assets/generated/stat-sessions.dim_400x300.jpg",
+    slogan: "Growth happens in community",
+  },
+  {
+    icon: Heart,
+    value: "94%",
+    label: "Satisfaction rate",
+    image: "/assets/generated/stat-satisfaction.dim_400x300.jpg",
+    slogan: "Wellness that works",
+  },
+  {
+    icon: Shield,
+    value: "100%",
+    label: "Safe & confidential",
+    image: "/assets/generated/stat-confidential.dim_400x300.jpg",
+    slogan: "Your story, your space",
+  },
 ];
 
 const EXERCISE_SPORT_PILLS = [
@@ -126,26 +150,42 @@ export function LandingPage() {
       </section>
 
       {/* ─── Stats ────────────────────────────────────────────── */}
-      <section className="py-12 border-y border-border/40 bg-muted/20">
+      <section className="py-14 border-y border-border/40 bg-muted/20">
         <div className="container max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
             {stats.map((stat, i) => (
               <motion.div
                 key={stat.label}
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.08, duration: 0.4 }}
-                className="text-center"
+                transition={{ delay: i * 0.1, duration: 0.45 }}
+                className="bg-card rounded-2xl border border-border/60 shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
               >
-                <div className="w-10 h-10 rounded-xl bg-accent/60 flex items-center justify-center mx-auto mb-2">
-                  <stat.icon className="w-5 h-5 text-accent-foreground" />
+                {/* Card image */}
+                <div className="relative h-36 overflow-hidden">
+                  <img
+                    src={stat.image}
+                    alt={stat.label}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-card/80 via-transparent to-transparent" />
                 </div>
-                <div className="font-display font-bold text-2xl text-foreground">
-                  {stat.value}
-                </div>
-                <div className="text-xs text-muted-foreground mt-0.5">
-                  {stat.label}
+
+                {/* Card body */}
+                <div className="px-4 pt-3 pb-4 text-center">
+                  <div className="w-9 h-9 rounded-xl bg-accent/60 flex items-center justify-center mx-auto mb-2">
+                    <stat.icon className="w-4.5 h-4.5 text-accent-foreground" />
+                  </div>
+                  <div className="font-display font-bold text-2xl text-foreground leading-none">
+                    {stat.value}
+                  </div>
+                  <div className="text-xs font-medium text-muted-foreground mt-1">
+                    {stat.label}
+                  </div>
+                  <div className="text-[11px] italic text-muted-foreground/70 mt-1.5 leading-snug">
+                    {stat.slogan}
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -181,13 +221,13 @@ export function LandingPage() {
                 label: "Social Gathering",
                 src: "/assets/generated/activity-social-gathering.dim_800x450.jpg",
               },
-            ].map((item, i) => (
+            ].map((item, idx) => (
               <motion.div
                 key={item.label}
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.4 }}
+                transition={{ delay: idx * 0.1, duration: 0.4 }}
                 className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden hover:shadow-md transition-shadow"
               >
                 <img

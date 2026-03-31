@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,6 +7,7 @@ import { Link } from "@tanstack/react-router";
 import {
   BarChart2,
   CalendarDays,
+  Clock,
   Loader2,
   LogIn,
   MessageCircle,
@@ -21,6 +23,8 @@ import { toast } from "sonner";
 import { SessionCard, SessionCardSkeleton } from "../components/SessionCard";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import {
+  ActivityLogType,
+  useActivityLogsForUser,
   useIsAdmin,
   useMySessions,
   useSaveUserProfile,
@@ -29,6 +33,34 @@ import {
 import { AdminDashboardView } from "./AdminDashboardPage";
 
 const LOADING_SKELETON_KEYS = ["sk-a", "sk-b", "sk-c", "sk-d"];
+
+const ACTIVITY_LOG_LABELS: Record<ActivityLogType, string> = {
+  [ActivityLogType.sessionCreated]: "Session Created",
+  [ActivityLogType.sessionJoined]: "Session Joined",
+  [ActivityLogType.sessionLeft]: "Session Left",
+  [ActivityLogType.taskCreated]: "Task Created",
+  [ActivityLogType.taskCompleted]: "Task Completed",
+  [ActivityLogType.providerBooked]: "Provider Booked",
+};
+
+const ACTIVITY_LOG_COLORS: Record<ActivityLogType, string> = {
+  [ActivityLogType.sessionCreated]:
+    "bg-emerald-500/15 text-emerald-700 border-emerald-200",
+  [ActivityLogType.sessionJoined]:
+    "bg-blue-500/15 text-blue-700 border-blue-200",
+  [ActivityLogType.sessionLeft]:
+    "bg-orange-500/15 text-orange-700 border-orange-200",
+  [ActivityLogType.taskCreated]:
+    "bg-purple-500/15 text-purple-700 border-purple-200",
+  [ActivityLogType.taskCompleted]:
+    "bg-teal-500/15 text-teal-700 border-teal-200",
+  [ActivityLogType.providerBooked]:
+    "bg-rose-500/15 text-rose-700 border-rose-200",
+};
+
+function formatTs(ns: bigint) {
+  return new Date(Number(ns / 1_000_000n)).toLocaleString();
+}
 
 type QuickAction = {
   icon: React.ElementType;
@@ -110,10 +142,8 @@ function QuickActionLink({ action }: { action: QuickAction }) {
       </div>
     </>
   );
-
   const cls =
     "flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors group";
-
   if (action.kind === "programs") {
     return (
       <Link
@@ -140,6 +170,9 @@ export function DashboardPage() {
   const { data: isAdmin, isLoading: adminLoading } = useIsAdmin();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: mySessions, isLoading: sessionsLoading } = useMySessions();
+  const { data: activityLogs, isLoading: logsLoading } = useActivityLogsForUser(
+    isAuthenticated ? identity.getPrincipal() : null,
+  );
   const saveProfileMutation = useSaveUserProfile();
 
   const [editingName, setEditingName] = useState(false);
@@ -210,6 +243,10 @@ export function DashboardPage() {
   const allMySessions = [...createdSessions, ...joinedSessions];
   const recentSessions = allMySessions.slice(0, 3);
 
+  const recentLogs = [...(activityLogs ?? [])]
+    .sort((a, b) => Number(b.createdAt - a.createdAt))
+    .slice(0, 10);
+
   const handleSaveName = async () => {
     if (!nameInput.trim()) return;
     try {
@@ -253,7 +290,6 @@ export function DashboardPage() {
                   Here's your wellness activity at a glance.
                 </p>
               </div>
-
               {!profile?.name && !editingName && (
                 <Button
                   variant="outline"
@@ -282,7 +318,6 @@ export function DashboardPage() {
                 </Button>
               )}
             </div>
-
             {editingName && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
@@ -386,7 +421,7 @@ export function DashboardPage() {
           </motion.div>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-6 mb-6">
           {/* Quick actions */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -470,6 +505,71 @@ export function DashboardPage() {
             </Card>
           </motion.div>
         </div>
+
+        {/* Activity Timeline */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Clock className="w-4 h-4 text-primary" />
+                My Activity
+                {!logsLoading && recentLogs.length > 0 && (
+                  <Badge variant="secondary" className="ml-auto text-xs">
+                    {recentLogs.length} recent
+                  </Badge>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {logsLoading ? (
+                <div className="space-y-3" data-ocid="dashboard.loading_state">
+                  {["l1", "l2", "l3"].map((k) => (
+                    <Skeleton key={k} className="h-10 w-full" />
+                  ))}
+                </div>
+              ) : recentLogs.length === 0 ? (
+                <div
+                  className="text-center py-8 text-muted-foreground"
+                  data-ocid="dashboard.empty_state"
+                >
+                  <Clock className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">No activity recorded yet</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {recentLogs.map((log, i) => (
+                    <motion.div
+                      key={log.id.toString()}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.05 * i }}
+                      className="flex items-center gap-3 py-2"
+                      data-ocid={`dashboard.item.${i + 1}`}
+                    >
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary/40 flex-shrink-0" />
+                      <Badge
+                        variant="outline"
+                        className={`text-xs flex-shrink-0 ${ACTIVITY_LOG_COLORS[log.activityType]}`}
+                      >
+                        {ACTIVITY_LOG_LABELS[log.activityType]}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground flex-1 truncate">
+                        ID #{log.relatedId.toString()}
+                      </span>
+                      <span className="text-xs text-muted-foreground flex-shrink-0">
+                        {formatTs(log.createdAt)}
+                      </span>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </main>
   );

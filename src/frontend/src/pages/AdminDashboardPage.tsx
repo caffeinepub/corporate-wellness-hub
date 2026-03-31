@@ -1,5 +1,13 @@
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -9,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "@tanstack/react-router";
 import {
   Activity,
@@ -17,13 +26,34 @@ import {
   ClipboardList,
   CreditCard,
   ExternalLink,
+  Loader2,
   Shield,
   Stethoscope,
+  ThumbsDown,
+  ThumbsUp,
+  Timer,
+  Trophy,
   Users,
+  X,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useAdminStats, useAllUserProfilesAdmin } from "../hooks/useQueries";
-import type { UserProfileEntry } from "../hooks/useQueries";
+import { useState } from "react";
+import { toast } from "sonner";
+import { ActivityLogType, ProviderType } from "../backend.d";
+import {
+  useActivityLogsForUser,
+  useAdminStats,
+  useAllActivityLogs,
+  useAllProviders,
+  useAllUserProfilesAdmin,
+  useApproveProvider,
+  usePendingProviders,
+  useRejectProvider,
+} from "../hooks/useQueries";
+import type {
+  ProviderApplication,
+  UserProfileEntry,
+} from "../hooks/useQueries";
 
 const PROGRAM_COLORS: Record<string, string> = {
   meetup: "bg-emerald-500",
@@ -46,6 +76,34 @@ const PROGRAM_LABELS: Record<string, string> = {
   tennis: "Tennis",
   pickleball: "Pickleball",
 };
+
+const ACTIVITY_LOG_LABELS: Record<ActivityLogType, string> = {
+  [ActivityLogType.sessionCreated]: "Session Created",
+  [ActivityLogType.sessionJoined]: "Session Joined",
+  [ActivityLogType.sessionLeft]: "Session Left",
+  [ActivityLogType.taskCreated]: "Task Created",
+  [ActivityLogType.taskCompleted]: "Task Completed",
+  [ActivityLogType.providerBooked]: "Provider Booked",
+};
+
+const ACTIVITY_LOG_COLORS: Record<ActivityLogType, string> = {
+  [ActivityLogType.sessionCreated]:
+    "bg-emerald-500/15 text-emerald-700 border-emerald-200",
+  [ActivityLogType.sessionJoined]:
+    "bg-blue-500/15 text-blue-700 border-blue-200",
+  [ActivityLogType.sessionLeft]:
+    "bg-orange-500/15 text-orange-700 border-orange-200",
+  [ActivityLogType.taskCreated]:
+    "bg-purple-500/15 text-purple-700 border-purple-200",
+  [ActivityLogType.taskCompleted]:
+    "bg-teal-500/15 text-teal-700 border-teal-200",
+  [ActivityLogType.providerBooked]:
+    "bg-rose-500/15 text-rose-700 border-rose-200",
+};
+
+function formatTs(ns: bigint) {
+  return new Date(Number(ns / 1_000_000n)).toLocaleString();
+}
 
 const STAT_SKELETON_KEYS = ["sk-stat-1", "sk-stat-2", "sk-stat-3", "sk-stat-4"];
 const CHART_SKELETON_KEYS = [
@@ -107,7 +165,8 @@ function StatCard({
   );
 }
 
-export function AdminDashboardView() {
+// ─── Overview Tab ───────────────────────────────────────────────
+function OverviewTab() {
   const { data: stats, isLoading: statsLoading } = useAdminStats();
   const { data: users, isLoading: usersLoading } = useAllUserProfilesAdmin();
 
@@ -117,7 +176,6 @@ export function AdminDashboardView() {
   const completedTasks = stats ? Number(stats.completedTasks) : 0;
   const completionRate =
     totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
   const sessionsByType = stats?.sessionsByType ?? [];
   const maxCount = sessionsByType.reduce(
     (m, [, c]) => Math.max(m, Number(c)),
@@ -130,6 +188,644 @@ export function AdminDashboardView() {
     return bTotal - aTotal;
   });
 
+  return (
+    <div className="space-y-6">
+      {/* Stats row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {statsLoading ? (
+          STAT_SKELETON_KEYS.map((k) => (
+            <Card key={k}>
+              <CardContent className="p-5">
+                <Skeleton className="h-4 w-24 mb-3" />
+                <Skeleton className="h-8 w-16" />
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <>
+            <StatCard
+              icon={Users}
+              label="Total Employees"
+              value={totalUsers}
+              sub="Registered users"
+              color="bg-emerald-500/15 text-emerald-600"
+              delay={0.1}
+            />
+            <StatCard
+              icon={Activity}
+              label="Total Sessions"
+              value={totalSessions}
+              sub="Across all programs"
+              color="bg-blue-500/15 text-blue-600"
+              delay={0.15}
+            />
+            <StatCard
+              icon={ClipboardList}
+              label="Total Tasks"
+              value={totalTasks}
+              sub={`${completedTasks} completed`}
+              color="bg-purple-500/15 text-purple-600"
+              delay={0.2}
+            />
+            <StatCard
+              icon={CheckCircle2}
+              label="Task Completion"
+              value={`${completionRate}%`}
+              sub={`${completedTasks} of ${totalTasks} tasks`}
+              color="bg-amber-500/15 text-amber-600"
+              delay={0.25}
+            />
+          </>
+        )}
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <BarChart3 className="w-4 h-4 text-primary" />
+              Sessions by Program
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {statsLoading ? (
+              CHART_SKELETON_KEYS.map((k) => (
+                <div key={k} className="space-y-1">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-6 w-full" />
+                </div>
+              ))
+            ) : sessionsByType.length === 0 ? (
+              <p
+                className="text-sm text-muted-foreground text-center py-6"
+                data-ocid="admin.empty_state"
+              >
+                No session data yet
+              </p>
+            ) : (
+              sessionsByType.map(([type, count]) => {
+                const label = PROGRAM_LABELS[type] ?? type;
+                const color = PROGRAM_COLORS[type] ?? "bg-gray-500";
+                const pct = Math.round((Number(count) / maxCount) * 100);
+                return (
+                  <div key={type}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-sm font-medium text-foreground">
+                        {label}
+                      </span>
+                      <span className="text-sm font-semibold text-foreground">
+                        {count.toString()}
+                      </span>
+                    </div>
+                    <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{
+                          delay: 0.4,
+                          duration: 0.6,
+                          ease: "easeOut",
+                        }}
+                        className={`h-full rounded-full ${color}`}
+                      />
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="h-full">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-base">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {[
+              {
+                icon: Activity,
+                label: "View All Sessions",
+                to: "/programs/$type" as const,
+                params: { type: "meetup" },
+                color: "bg-emerald-500/10 text-emerald-600",
+                ocid: "admin.sessions_link",
+              },
+              {
+                icon: CreditCard,
+                label: "Manage Memberships",
+                to: "/membership" as const,
+                params: undefined,
+                color: "bg-amber-500/10 text-amber-600",
+                ocid: "admin.membership_link",
+              },
+              {
+                icon: Stethoscope,
+                label: "View Psychologists",
+                to: "/psychologists" as const,
+                params: undefined,
+                color: "bg-blue-500/10 text-blue-600",
+                ocid: "admin.psychologists_link",
+              },
+            ].map((action) => (
+              <Link
+                key={action.label}
+                to={action.to}
+                params={action.params}
+                data-ocid={action.ocid}
+                className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors group"
+              >
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${action.color}`}
+                >
+                  <action.icon className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors flex-1">
+                  {action.label}
+                </span>
+                <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+              </Link>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Employee Activity Table */}
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Users className="w-4 h-4 text-primary" />
+            Employee Activity
+            {!usersLoading && (
+              <Badge variant="secondary" className="ml-auto text-xs">
+                {sortedUsers.length} registered
+              </Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {usersLoading ? (
+            <div className="p-6 space-y-3" data-ocid="admin.loading_state">
+              {TABLE_SKELETON_KEYS.map((k) => (
+                <Skeleton key={k} className="h-10 w-full" />
+              ))}
+            </div>
+          ) : sortedUsers.length === 0 ? (
+            <div
+              className="text-center py-12 text-muted-foreground"
+              data-ocid="admin.empty_state"
+            >
+              <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="text-sm font-medium">No employees registered yet</p>
+              <p className="text-xs mt-1">
+                Users will appear here once they sign in
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table data-ocid="admin.table">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="pl-6">Employee</TableHead>
+                    <TableHead className="text-center">
+                      Sessions Created
+                    </TableHead>
+                    <TableHead className="text-center">
+                      Sessions Joined
+                    </TableHead>
+                    <TableHead className="text-center pr-6">
+                      Total Participation
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sortedUsers.map((user, i) => {
+                    const total =
+                      Number(user.sessionsCreated) +
+                      Number(user.sessionsJoined);
+                    const userInitials = user.name
+                      ? user.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .slice(0, 2)
+                          .toUpperCase()
+                      : "?";
+                    return (
+                      <TableRow
+                        key={user.principal.toString()}
+                        data-ocid={`admin.row.${i + 1}`}
+                      >
+                        <TableCell className="pl-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary flex-shrink-0">
+                              {userInitials}
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm text-foreground">
+                                {user.name || "Anonymous"}
+                              </p>
+                              <p className="text-xs text-muted-foreground font-mono truncate max-w-[120px]">
+                                {user.principal.toString().slice(0, 12)}…
+                              </p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline" className="text-xs">
+                            {user.sessionsCreated.toString()}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline" className="text-xs">
+                            {user.sessionsJoined.toString()}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center pr-6">
+                          <Badge
+                            className={`text-xs ${total > 5 ? "bg-emerald-500/15 text-emerald-700 border-emerald-200" : total > 2 ? "bg-blue-500/15 text-blue-700 border-blue-200" : "bg-muted text-muted-foreground"}`}
+                            variant="outline"
+                          >
+                            {total}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ─── Provider Review Tab ─────────────────────────────────────────
+function ProviderCard({
+  provider,
+  onApprove,
+  onReject,
+  approvePending,
+  rejectPending,
+}: {
+  provider: ProviderApplication;
+  onApprove: (id: bigint) => void;
+  onReject: (id: bigint) => void;
+  approvePending: boolean;
+  rejectPending: boolean;
+}) {
+  const isPsych = provider.providerType === ProviderType.psychologist;
+  return (
+    <div className="flex items-start gap-4 p-4 rounded-xl border border-border hover:bg-muted/30 transition-colors">
+      <div
+        className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isPsych ? "bg-blue-500/10" : "bg-amber-500/10"}`}
+      >
+        {isPsych ? (
+          <Stethoscope className="w-5 h-5 text-blue-600" />
+        ) : (
+          <Trophy className="w-5 h-5 text-amber-600" />
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
+          <p className="font-medium text-sm text-foreground">{provider.name}</p>
+          <Badge
+            variant="outline"
+            className={`text-xs ${isPsych ? "border-blue-200 text-blue-700" : "border-amber-200 text-amber-700"}`}
+          >
+            {isPsych ? "Psychologist" : "Sports Company"}
+          </Badge>
+        </div>
+        <p className="text-xs text-muted-foreground mb-1 line-clamp-2">
+          {provider.description}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Submitted: {formatTs(provider.submittedAt)}
+        </p>
+      </div>
+      {!provider.isApproved && !provider.isRejected && (
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-xl text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+            onClick={() => onApprove(provider.id)}
+            disabled={approvePending}
+            data-ocid="admin.confirm_button"
+          >
+            {approvePending ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <ThumbsUp className="w-3.5 h-3.5" />
+            )}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-xl text-destructive border-destructive/30 hover:bg-destructive/5"
+            onClick={() => onReject(provider.id)}
+            disabled={rejectPending}
+            data-ocid="admin.delete_button"
+          >
+            {rejectPending ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <X className="w-3.5 h-3.5" />
+            )}
+          </Button>
+        </div>
+      )}
+      {provider.isApproved && (
+        <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-200 flex-shrink-0">
+          <CheckCircle2 className="w-3 h-3 mr-1" />
+          Approved
+        </Badge>
+      )}
+      {provider.isRejected && (
+        <Badge
+          variant="outline"
+          className="text-destructive border-destructive/30 flex-shrink-0"
+        >
+          <X className="w-3 h-3 mr-1" />
+          Rejected
+        </Badge>
+      )}
+    </div>
+  );
+}
+
+function ProviderReviewTab() {
+  const { data: allProviders, isLoading } = useAllProviders();
+  const approveMutation = useApproveProvider();
+  const rejectMutation = useRejectProvider();
+
+  const pending = (allProviders ?? []).filter(
+    (p) => !p.isApproved && !p.isRejected,
+  );
+  const approved = (allProviders ?? []).filter((p) => p.isApproved);
+  const rejected = (allProviders ?? []).filter((p) => p.isRejected);
+
+  const handleApprove = async (id: bigint) => {
+    try {
+      await approveMutation.mutateAsync(id);
+      toast.success("Provider approved!");
+    } catch {
+      toast.error("Failed to approve provider");
+    }
+  };
+
+  const handleReject = async (id: bigint) => {
+    try {
+      await rejectMutation.mutateAsync(id);
+      toast.success("Provider rejected");
+    } catch {
+      toast.error("Failed to reject provider");
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-5">
+            <p className="text-xs text-muted-foreground mb-1">Pending Review</p>
+            <p className="text-3xl font-bold text-amber-600">
+              {isLoading ? "—" : pending.length}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-5">
+            <p className="text-xs text-muted-foreground mb-1">Approved</p>
+            <p className="text-3xl font-bold text-emerald-600">
+              {isLoading ? "—" : approved.length}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-5">
+            <p className="text-xs text-muted-foreground mb-1">Rejected</p>
+            <p className="text-3xl font-bold text-destructive">
+              {isLoading ? "—" : rejected.length}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Pending */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Timer className="w-4 h-4 text-amber-600" />
+            Pending Applications
+            <Badge
+              variant="outline"
+              className="ml-auto text-amber-700 border-amber-200"
+            >
+              {pending.length}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="space-y-3" data-ocid="admin.loading_state">
+              {["p1", "p2"].map((k) => (
+                <Skeleton key={k} className="h-20 w-full rounded-xl" />
+              ))}
+            </div>
+          ) : pending.length === 0 ? (
+            <p
+              className="text-sm text-muted-foreground text-center py-6"
+              data-ocid="admin.empty_state"
+            >
+              No pending applications
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {pending.map((p, i) => (
+                <ProviderCard
+                  key={p.id.toString()}
+                  provider={p}
+                  onApprove={handleApprove}
+                  onReject={handleReject}
+                  approvePending={approveMutation.isPending}
+                  rejectPending={rejectMutation.isPending}
+                  data-ocid={`admin.item.${i + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Approved */}
+      {approved.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              Approved Providers
+              <Badge className="ml-auto bg-emerald-500/10 text-emerald-700 border-emerald-200">
+                {approved.length}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {approved.map((p, i) => (
+                <ProviderCard
+                  key={p.id.toString()}
+                  provider={p}
+                  onApprove={handleApprove}
+                  onReject={handleReject}
+                  approvePending={false}
+                  rejectPending={false}
+                  data-ocid={`admin.item.${i + 1}`}
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Rejected */}
+      {rejected.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ThumbsDown className="w-4 h-4 text-muted-foreground" />
+              Rejected Applications
+              <Badge variant="outline" className="ml-auto">
+                {rejected.length}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {rejected.map((p, i) => (
+                <ProviderCard
+                  key={p.id.toString()}
+                  provider={p}
+                  onApprove={handleApprove}
+                  onReject={handleReject}
+                  approvePending={false}
+                  rejectPending={false}
+                  data-ocid={`admin.item.${i + 1}`}
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// ─── Activity Logs Tab ───────────────────────────────────────────
+function ActivityLogsTab() {
+  const { data: logs, isLoading } = useAllActivityLogs();
+  const [filter, setFilter] = useState<string>("all");
+
+  const filtered = (logs ?? [])
+    .filter((l) => (filter === "all" ? true : l.activityType === filter))
+    .sort((a, b) => Number(b.createdAt - a.createdAt));
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <p className="text-sm font-medium text-foreground">Filter by type:</p>
+        <Select value={filter} onValueChange={setFilter}>
+          <SelectTrigger className="w-52 rounded-xl" data-ocid="admin.select">
+            <SelectValue placeholder="All activities" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Activities</SelectItem>
+            {Object.values(ActivityLogType).map((type) => (
+              <SelectItem key={type} value={type}>
+                {ACTIVITY_LOG_LABELS[type]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {!isLoading && (
+          <Badge variant="secondary" className="ml-auto">
+            {filtered.length} entries
+          </Badge>
+        )}
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="p-6 space-y-3" data-ocid="admin.loading_state">
+              {TABLE_SKELETON_KEYS.map((k) => (
+                <Skeleton key={k} className="h-12 w-full" />
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div
+              className="text-center py-12 text-muted-foreground"
+              data-ocid="admin.empty_state"
+            >
+              <Activity className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="text-sm font-medium">No activity logs yet</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table data-ocid="admin.table">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="pl-6">Activity</TableHead>
+                    <TableHead>User</TableHead>
+                    <TableHead>Related ID</TableHead>
+                    <TableHead className="pr-6">Time</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((log, i) => (
+                    <TableRow
+                      key={log.id.toString()}
+                      data-ocid={`admin.row.${i + 1}`}
+                    >
+                      <TableCell className="pl-6">
+                        <Badge
+                          variant="outline"
+                          className={`text-xs ${ACTIVITY_LOG_COLORS[log.activityType]}`}
+                        >
+                          {ACTIVITY_LOG_LABELS[log.activityType]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-xs font-mono text-muted-foreground">
+                          {log.user.toString().slice(0, 12)}…
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-xs text-muted-foreground">
+                          #{log.relatedId.toString()}
+                        </span>
+                      </TableCell>
+                      <TableCell className="pr-6">
+                        <span className="text-xs text-muted-foreground">
+                          {formatTs(log.createdAt)}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ─── Main Export ─────────────────────────────────────────────────
+export function AdminDashboardView() {
   return (
     <main
       className="min-h-screen bg-background pt-24 pb-16 px-4"
@@ -158,309 +854,36 @@ export function AdminDashboardView() {
                   </Badge>
                 </div>
                 <p className="text-muted-foreground">
-                  Platform overview and employee activity
+                  Platform overview, provider management, and activity logs
                 </p>
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Stats row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {statsLoading ? (
-            STAT_SKELETON_KEYS.map((k) => (
-              <Card key={k}>
-                <CardContent className="p-5">
-                  <Skeleton className="h-4 w-24 mb-3" />
-                  <Skeleton className="h-8 w-16" />
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <>
-              <StatCard
-                icon={Users}
-                label="Total Employees"
-                value={totalUsers}
-                sub="Registered users"
-                color="bg-emerald-500/15 text-emerald-600"
-                delay={0.1}
-              />
-              <StatCard
-                icon={Activity}
-                label="Total Sessions"
-                value={totalSessions}
-                sub="Across all programs"
-                color="bg-blue-500/15 text-blue-600"
-                delay={0.15}
-              />
-              <StatCard
-                icon={ClipboardList}
-                label="Total Tasks"
-                value={totalTasks}
-                sub={`${completedTasks} completed`}
-                color="bg-purple-500/15 text-purple-600"
-                delay={0.2}
-              />
-              <StatCard
-                icon={CheckCircle2}
-                label="Task Completion"
-                value={`${completionRate}%`}
-                sub={`${completedTasks} of ${totalTasks} tasks`}
-                color="bg-amber-500/15 text-amber-600"
-                delay={0.25}
-              />
-            </>
-          )}
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-6 mb-6">
-          {/* Sessions by Program chart */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="lg:col-span-2"
-          >
-            <Card>
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <BarChart3 className="w-4 h-4 text-primary" />
-                  Sessions by Program
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {statsLoading ? (
-                  CHART_SKELETON_KEYS.map((k) => (
-                    <div key={k} className="space-y-1">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-6 w-full" />
-                    </div>
-                  ))
-                ) : sessionsByType.length === 0 ? (
-                  <p
-                    className="text-sm text-muted-foreground text-center py-6"
-                    data-ocid="admin.empty_state"
-                  >
-                    No session data yet
-                  </p>
-                ) : (
-                  sessionsByType.map(([type, count]) => {
-                    const label = PROGRAM_LABELS[type] ?? type;
-                    const color = PROGRAM_COLORS[type] ?? "bg-gray-500";
-                    const pct = Math.round((Number(count) / maxCount) * 100);
-                    return (
-                      <div key={type}>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-sm font-medium text-foreground">
-                            {label}
-                          </span>
-                          <span className="text-sm font-semibold text-foreground">
-                            {count.toString()}
-                          </span>
-                        </div>
-                        <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${pct}%` }}
-                            transition={{
-                              delay: 0.4,
-                              duration: 0.6,
-                              ease: "easeOut",
-                            }}
-                            className={`h-full rounded-full ${color}`}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Quick Admin Actions */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-          >
-            <Card className="h-full">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-base">Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {[
-                  {
-                    icon: Activity,
-                    label: "View All Sessions",
-                    to: "/programs/$type" as const,
-                    params: { type: "meetup" },
-                    color: "bg-emerald-500/10 text-emerald-600",
-                    ocid: "admin.sessions_link",
-                  },
-                  {
-                    icon: CreditCard,
-                    label: "Manage Memberships",
-                    to: "/membership" as const,
-                    params: undefined,
-                    color: "bg-amber-500/10 text-amber-600",
-                    ocid: "admin.membership_link",
-                  },
-                  {
-                    icon: Stethoscope,
-                    label: "View Psychologists",
-                    to: "/psychologists" as const,
-                    params: undefined,
-                    color: "bg-blue-500/10 text-blue-600",
-                    ocid: "admin.psychologists_link",
-                  },
-                ].map((action) => (
-                  <Link
-                    key={action.label}
-                    to={action.to}
-                    params={action.params}
-                    data-ocid={action.ocid}
-                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors group"
-                  >
-                    <div
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${action.color}`}
-                    >
-                      <action.icon className="w-4 h-4" />
-                    </div>
-                    <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors flex-1">
-                      {action.label}
-                    </span>
-                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
-                  </Link>
-                ))}
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-
-        {/* Employee Activity Table */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Users className="w-4 h-4 text-primary" />
-                Employee Activity
-                {!usersLoading && (
-                  <Badge variant="secondary" className="ml-auto text-xs">
-                    {sortedUsers.length} registered
-                  </Badge>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {usersLoading ? (
-                <div className="p-6 space-y-3" data-ocid="admin.loading_state">
-                  {TABLE_SKELETON_KEYS.map((k) => (
-                    <Skeleton key={k} className="h-10 w-full" />
-                  ))}
-                </div>
-              ) : sortedUsers.length === 0 ? (
-                <div
-                  className="text-center py-12 text-muted-foreground"
-                  data-ocid="admin.empty_state"
-                >
-                  <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                  <p className="text-sm font-medium">
-                    No employees registered yet
-                  </p>
-                  <p className="text-xs mt-1">
-                    Users will appear here once they sign in
-                  </p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table data-ocid="admin.table">
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="pl-6">Employee</TableHead>
-                        <TableHead className="text-center">
-                          Sessions Created
-                        </TableHead>
-                        <TableHead className="text-center">
-                          Sessions Joined
-                        </TableHead>
-                        <TableHead className="text-center pr-6">
-                          Total Participation
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {sortedUsers.map((user, i) => {
-                        const total =
-                          Number(user.sessionsCreated) +
-                          Number(user.sessionsJoined);
-                        const userInitials = user.name
-                          ? user.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")
-                              .slice(0, 2)
-                              .toUpperCase()
-                          : "?";
-                        return (
-                          <TableRow
-                            key={user.principal.toString()}
-                            data-ocid={`admin.row.${i + 1}`}
-                          >
-                            <TableCell className="pl-6">
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary flex-shrink-0">
-                                  {userInitials}
-                                </div>
-                                <div>
-                                  <p className="font-medium text-sm text-foreground">
-                                    {user.name || "Anonymous"}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground font-mono truncate max-w-[120px]">
-                                    {user.principal.toString().slice(0, 12)}…
-                                  </p>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Badge variant="outline" className="text-xs">
-                                {user.sessionsCreated.toString()}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Badge variant="outline" className="text-xs">
-                                {user.sessionsJoined.toString()}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-center pr-6">
-                              <Badge
-                                className={`text-xs ${
-                                  total > 5
-                                    ? "bg-emerald-500/15 text-emerald-700 border-emerald-200"
-                                    : total > 2
-                                      ? "bg-blue-500/15 text-blue-700 border-blue-200"
-                                      : "bg-muted text-muted-foreground"
-                                }`}
-                                variant="outline"
-                              >
-                                {total}
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
+        {/* Tabs */}
+        <Tabs defaultValue="overview" data-ocid="admin.tab">
+          <TabsList className="mb-6">
+            <TabsTrigger value="overview" data-ocid="admin.tab">
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="providers" data-ocid="admin.tab">
+              Provider Review
+            </TabsTrigger>
+            <TabsTrigger value="activity" data-ocid="admin.tab">
+              Activity Logs
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="overview">
+            <OverviewTab />
+          </TabsContent>
+          <TabsContent value="providers">
+            <ProviderReviewTab />
+          </TabsContent>
+          <TabsContent value="activity">
+            <ActivityLogsTab />
+          </TabsContent>
+        </Tabs>
       </div>
     </main>
   );
